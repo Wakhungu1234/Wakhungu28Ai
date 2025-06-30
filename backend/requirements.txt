@@ -23,3 +23,6 @@ numpy>=1.26.0
 python-multipart>=0.0.9
 jq>=1.6.0
 typer>=0.9.0
+websockets>=12.0
+asyncio-mqtt>=0.16.0
+aiofiles>=24.1.0
