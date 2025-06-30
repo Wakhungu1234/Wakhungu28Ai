@@ -601,6 +601,154 @@ async def list_bots():
         logger.error(f"Error listing bots: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# =============================================================================
+# ENHANCED HIGH-FREQUENCY BOT ENDPOINTS
+# =============================================================================
+
+@api_router.get("/bot/configuration-options")
+async def get_configuration_options():
+    """Get all available configuration options for advanced bot creation"""
+    try:
+        return {
+            "status": "success",
+            "options": {
+                "markets": [
+                    {"value": "R_10", "label": "Volatility 10 Index"},
+                    {"value": "R_25", "label": "Volatility 25 Index"},
+                    {"value": "R_50", "label": "Volatility 50 Index"},
+                    {"value": "R_75", "label": "Volatility 75 Index"},
+                    {"value": "R_100", "label": "Volatility 100 Index"},
+                    {"value": "1HZ10V", "label": "Volatility 10 (1s) Index"},
+                    {"value": "1HZ25V", "label": "Volatility 25 (1s) Index"},
+                    {"value": "1HZ50V", "label": "Volatility 50 (1s) Index"},
+                    {"value": "1HZ75V", "label": "Volatility 75 (1s) Index"},
+                    {"value": "1HZ100V", "label": "Volatility 100 (1s) Index"}
+                ],
+                "contract_types": [
+                    {"value": "AUTO_BEST", "label": "Auto (Best Confidence)", "description": "AI selects best contract type"},
+                    {"value": "OVER_UNDER", "label": "Over/Under", "description": "Last digit over or under a number"},
+                    {"value": "MATCH_DIFFER", "label": "Match/Differ", "description": "Last digit matches or differs from a number"},
+                    {"value": "EVEN_ODD", "label": "Even/Odd", "description": "Last digit is even or odd"}
+                ],
+                "trade_types": {
+                    "OVER_UNDER": [
+                        {"value": "AUTO", "label": "Auto (Best)", "description": "AI selects best option"},
+                        {"value": "OVER", "label": "Over", "description": "Last digit over the prediction number"},
+                        {"value": "UNDER", "label": "Under", "description": "Last digit under the prediction number"}
+                    ],
+                    "MATCH_DIFFER": [
+                        {"value": "AUTO", "label": "Auto (Best)", "description": "AI selects match or differ"},
+                        {"value": "MATCH", "label": "Match", "description": "Last digit matches the prediction number"},
+                        {"value": "DIFFER", "label": "Differ", "description": "Last digit differs from the prediction number"}
+                    ],
+                    "EVEN_ODD": [
+                        {"value": "AUTO", "label": "Auto (Best)", "description": "AI selects even or odd"},
+                        {"value": "EVEN", "label": "Even", "description": "Last digit is even (0,2,4,6,8)"},
+                        {"value": "ODD", "label": "Odd", "description": "Last digit is odd (1,3,5,7,9)"}
+                    ],
+                    "AUTO_BEST": [
+                        {"value": "AUTO", "label": "Auto (AI Optimized)", "description": "AI selects the best option"}
+                    ]
+                },
+                "prediction_numbers": {
+                    "OVER": [2, 3, 4, 5, 6, 7, 8],
+                    "UNDER": [8, 7, 6, 5, 4, 3, 2, 1],
+                    "MATCH_DIFFER": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+                },
+                "ticks_options": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30],
+                "stake_range": {"min": 1.0, "max": 1000.0, "default": 10.0},
+                "confidence_range": {"min": 50, "max": 95, "default": 60},
+                "martingale_multiplier_range": {"min": 1.1, "max": 5.0, "default": 2.0},
+                "max_martingale_steps_range": {"min": 1, "max": 10, "default": 5},
+                "trades_per_hour_range": {"min": 1, "max": 1000, "default": 500},
+                "trade_interval_range": {"min": 0.1, "max": 60.0, "default": 0.3}
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting configuration options: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/bot/create-advanced")
+async def create_advanced_bot(request: AdvancedBotCreateRequest):
+    """Create a new High-Frequency Wakhungu28Ai bot instance with advanced parameters"""
+    try:
+        # Create advanced trading parameters
+        trading_params = TradingParameters(
+            contract_type=request.contract_type,
+            trade_type=request.trade_type,
+            prediction_number=request.prediction_number,
+            stake=request.stake,
+            stop_loss=request.stop_loss,
+            take_profit=request.take_profit,
+            ticks_count=request.ticks_count,
+            martingale_enabled=request.martingale_enabled,
+            martingale_multiplier=request.martingale_multiplier,
+            max_martingale_steps=request.max_martingale_steps
+        )
+        
+        # Create enhanced bot configuration
+        config = BotConfig(
+            bot_name=request.bot_name,
+            initial_balance=request.initial_balance,
+            deriv_api_token=request.deriv_api_token,
+            min_confidence=request.min_confidence,
+            selected_market=request.selected_market,
+            trading_params=trading_params,
+            max_trades_per_hour=request.max_trades_per_hour,
+            trade_interval_seconds=request.trade_interval_seconds,
+            quick_analysis_mode=True,
+            auto_recovery_mode=True
+        )
+        
+        # Store bot config in database
+        await db.bot_configs.insert_one(config.dict())
+        
+        # Create bot service instance
+        analysis_api_url = os.environ.get('REACT_APP_BACKEND_URL', 'http://localhost:8001').replace('//', '//').rstrip('/')
+        bot_token = "bot_token_demo_123"  # Use existing demo token
+        
+        bot_id = await create_bot_instance(config, analysis_api_url, bot_token)
+        
+        return {
+            "status": "success",
+            "message": "High-Frequency Wakhungu28Ai bot created successfully",
+            "bot_id": bot_id,
+            "config": config.dict(),
+            "features": {
+                "high_frequency": True,
+                "max_trades_per_day": config.max_trades_per_hour * 24,
+                "martingale_recovery": config.trading_params.martingale_enabled,
+                "ai_analysis": True,
+                "risk_management": True
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error creating advanced bot: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/bot/{bot_id}/martingale-info")
+async def get_bot_martingale_info(bot_id: str):
+    """Get Martingale recovery information for a bot"""
+    try:
+        if bot_id not in active_bots:
+            raise HTTPException(status_code=404, detail="Bot not found")
+        
+        martingale_info = await active_bots[bot_id].get_martingale_info()
+        
+        return {
+            "status": "success",
+            "bot_id": bot_id,
+            "martingale_info": martingale_info
+        }
+        
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error getting Martingale info for {bot_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     """WebSocket endpoint for real-time tick updates"""
