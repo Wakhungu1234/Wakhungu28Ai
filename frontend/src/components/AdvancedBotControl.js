@@ -133,6 +133,39 @@ const AdvancedBotControl = () => {
     }
   };
 
+  const createQuickStartBot = async () => {
+    const apiToken = prompt("🚀 QUICK START ULTRA-AGGRESSIVE BOT\n\nEnter your Deriv API Token to start trading immediately:\n(Bot will trade every 3 seconds with aggressive settings)");
+    
+    if (!apiToken || !apiToken.trim()) {
+      alert("API Token is required for Quick Start mode");
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const response = await axios.post(`${API}/bot/quick-start`, {
+        deriv_api_token: apiToken.trim(),
+        initial_balance: 1000,
+        stake: 10
+      });
+      
+      if (response.data.status === "success") {
+        await fetchBots();
+        
+        // Select the newly created bot
+        const newBot = bots.find(bot => bot.id === response.data.bot_id);
+        if (newBot) setSelectedBot(newBot);
+        
+        alert(`🚀 ULTRA-AGGRESSIVE BOT STARTED!\n\n✅ Bot: ${response.data.message}\n⚡ Trade Interval: ${response.data.features.trade_interval}\n🎯 Expected Trades/Hour: ${response.data.features.expected_trades_per_hour}\n🔥 ${response.data.features.first_trade_expected}\n\n⚠️ VERY AGGRESSIVE SETTINGS - Monitor closely!`);
+      }
+    } catch (error) {
+      console.error("Error creating quick start bot:", error);
+      alert("Failed to create Quick Start bot. Please check your API token and try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const startBot = async () => {
     if (!selectedBot) return;
     
