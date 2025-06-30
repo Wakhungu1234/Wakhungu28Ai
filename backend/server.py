@@ -744,6 +744,7 @@ async def create_quick_start_bot(request: dict):
     """Quick start bot with ultra-aggressive settings and custom parameters"""
     try:
         deriv_api_token = request.get("deriv_api_token", "")
+        selected_market = request.get("selected_market", "R_100")
         stake = request.get("stake", 10.0)
         take_profit = request.get("take_profit", 500.0)
         stop_loss = request.get("stop_loss", 200.0)
@@ -768,11 +769,11 @@ async def create_quick_start_bot(request: dict):
         )
         
         config = BotConfig(
-            bot_name=f"QuickStart-Ultra-${stake}",
+            bot_name=f"QuickStart-{selected_market}-${stake}",
             initial_balance=1000.0,  # Fixed initial balance
             deriv_api_token=deriv_api_token.strip(),
             min_confidence=50.0,  # Very low for frequent trades
-            selected_market="R_100",  # Popular market
+            selected_market=selected_market,  # Use selected market
             trading_params=trading_params,
             max_trades_per_hour=1200,  # Maximum frequency
             trade_interval_seconds=3.0,  # 3 seconds between trades
@@ -795,10 +796,11 @@ async def create_quick_start_bot(request: dict):
         
         return {
             "status": "success",
-            "message": f"🚀 ULTRA-AGGRESSIVE QuickStart bot created and started with ${stake} stakes!",
+            "message": f"🚀 ULTRA-AGGRESSIVE QuickStart bot created for {selected_market} with ${stake} stakes!",
             "bot_id": bot_id,
             "auto_started": True,
             "configuration": {
+                "market": selected_market,
                 "stake": f"${stake}",
                 "take_profit": f"${take_profit}",
                 "stop_loss": f"${stop_loss}",
@@ -811,9 +813,10 @@ async def create_quick_start_bot(request: dict):
                 "expected_trades_per_hour": "1200",
                 "immediate_trading": True,
                 "first_trade_expected": "Within 10 seconds",
-                "custom_risk_management": True
+                "custom_risk_management": True,
+                "auto_stop_on_targets": True
             },
-            "note": f"Bot will start trading immediately with ${stake} stakes and {martingale_multiplier}x Martingale recovery!"
+            "note": f"Bot will trade {selected_market} with ${stake} stakes and {martingale_multiplier}x Martingale. Auto-stops on Take Profit: ${take_profit} or Stop Loss: ${stop_loss}"
         }
         
     except Exception as e:
