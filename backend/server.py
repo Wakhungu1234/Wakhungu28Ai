@@ -741,32 +741,35 @@ async def create_advanced_bot(request: AdvancedBotCreateRequest):
 
 @api_router.post("/bot/quick-start")
 async def create_quick_start_bot(request: dict):
-    """Quick start bot with ultra-aggressive settings for immediate trading"""
+    """Quick start bot with ultra-aggressive settings and custom parameters"""
     try:
         deriv_api_token = request.get("deriv_api_token", "")
-        initial_balance = request.get("initial_balance", 1000.0)
         stake = request.get("stake", 10.0)
+        take_profit = request.get("take_profit", 500.0)
+        stop_loss = request.get("stop_loss", 200.0)
+        martingale_multiplier = request.get("martingale_multiplier", 2.0)
+        max_martingale_steps = request.get("max_martingale_steps", 5)
         
         if not deriv_api_token or not deriv_api_token.strip():
             raise HTTPException(status_code=400, detail="Deriv API token is required")
         
-        # Ultra-aggressive quick start configuration
+        # Ultra-aggressive quick start configuration with custom parameters
         trading_params = TradingParameters(
             contract_type="AUTO_BEST",
             trade_type="AUTO",
             prediction_number=None,
             stake=float(stake),
-            stop_loss=None,
-            take_profit=None,
+            stop_loss=float(stop_loss) if stop_loss else None,
+            take_profit=float(take_profit) if take_profit else None,
             ticks_count=5,
             martingale_enabled=True,
-            martingale_multiplier=2.0,
-            max_martingale_steps=3
+            martingale_multiplier=float(martingale_multiplier),
+            max_martingale_steps=int(max_martingale_steps)
         )
         
         config = BotConfig(
-            bot_name="QuickStart-UltraAggressive",
-            initial_balance=float(initial_balance),
+            bot_name=f"QuickStart-Ultra-${stake}",
+            initial_balance=1000.0,  # Fixed initial balance
             deriv_api_token=deriv_api_token.strip(),
             min_confidence=50.0,  # Very low for frequent trades
             selected_market="R_100",  # Popular market
@@ -774,11 +777,9 @@ async def create_quick_start_bot(request: dict):
             max_trades_per_hour=1200,  # Maximum frequency
             trade_interval_seconds=3.0,  # 3 seconds between trades
             quick_analysis_mode=True,
-            auto_recovery_mode=True
+            auto_recovery_mode=True,
+            ultra_aggressive_mode=True
         )
-        
-        # Add ultra-aggressive flag
-        config.ultra_aggressive_mode = True
         
         # Store bot config in database
         await db.bot_configs.insert_one(config.dict())
@@ -794,17 +795,25 @@ async def create_quick_start_bot(request: dict):
         
         return {
             "status": "success",
-            "message": "🚀 ULTRA-AGGRESSIVE QuickStart bot created and started!",
+            "message": f"🚀 ULTRA-AGGRESSIVE QuickStart bot created and started with ${stake} stakes!",
             "bot_id": bot_id,
             "auto_started": True,
+            "configuration": {
+                "stake": f"${stake}",
+                "take_profit": f"${take_profit}",
+                "stop_loss": f"${stop_loss}",
+                "martingale_multiplier": f"{martingale_multiplier}x",
+                "max_martingale_steps": max_martingale_steps
+            },
             "features": {
                 "ultra_aggressive": True,
                 "trade_interval": "3 seconds",
                 "expected_trades_per_hour": "1200",
                 "immediate_trading": True,
-                "first_trade_expected": "Within 10 seconds"
+                "first_trade_expected": "Within 10 seconds",
+                "custom_risk_management": True
             },
-            "note": "Bot will start trading immediately with very aggressive settings!"
+            "note": f"Bot will start trading immediately with ${stake} stakes and {martingale_multiplier}x Martingale recovery!"
         }
         
     except Exception as e:
