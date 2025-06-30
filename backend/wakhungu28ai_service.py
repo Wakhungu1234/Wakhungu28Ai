@@ -16,6 +16,7 @@ import requests
 from models import BotConfig, BotStatus, BotTrade, AdvancedBotCreateRequest, TradingParameters
 from analysis import analyze_ticks
 from high_frequency_ai import HighFrequencyTradingEngine
+from ultra_aggressive_ai import UltraAggressiveTradingEngine
 
 logger = logging.getLogger('Wakhungu28AiService')
 
