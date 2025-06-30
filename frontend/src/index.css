@@ -2,16 +2,121 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
-        "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
-        "Helvetica Neue", sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
 }
 
-code {
-    font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-        monospace;
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.7);
+}
+
+/* Loading animations */
+@keyframes pulse-blue {
+  0%, 100% {
+    background-color: rgba(59, 130, 246, 0.1);
+  }
+  50% {
+    background-color: rgba(59, 130, 246, 0.3);
+  }
+}
+
+.animate-pulse-blue {
+  animation: pulse-blue 2s ease-in-out infinite;
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(45deg, #3b82f6, #8b5cf6, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Custom button styles */
+.btn-primary {
+  @apply bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl;
+}
+
+.btn-secondary {
+  @apply bg-white/10 hover:bg-white/20 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 border border-white/20;
+}
+
+/* Card styles */
+.card {
+  @apply bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 p-6;
+}
+
+.card-header {
+  @apply border-b border-white/10 pb-4 mb-4;
+}
+
+/* Status indicators */
+.status-indicator {
+  @apply inline-flex items-center space-x-2 px-3 py-1 rounded-full text-sm font-medium;
+}
+
+.status-online {
+  @apply bg-green-500/20 text-green-400 border border-green-500/30;
+}
+
+.status-offline {
+  @apply bg-red-500/20 text-red-400 border border-red-500/30;
+}
+
+.status-warning {
+  @apply bg-yellow-500/20 text-yellow-400 border border-yellow-500/30;
+}
+
+/* Animation for bot status */
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.bot-active .status-dot {
+  animation: heartbeat 2s ease-in-out infinite;
+}
+
+/* Trading signal animations */
+@keyframes signal-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
+  }
+}
+
+.signal-card {
+  animation: signal-glow 3s ease-in-out infinite;
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .mobile-grid {
+    @apply grid-cols-1;
+  }
+  
+  .mobile-text {
+    @apply text-sm;
+  }
 }
