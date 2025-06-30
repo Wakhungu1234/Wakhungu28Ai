@@ -63,9 +63,10 @@ VOLATILITY_INDICES = [
     {"id": "1HZ100V", "name": "Volatility 100 (1s) Index", "symbol": "1HZ100V", "description": "1-second volatility 100% index"}
 ]
 
-# In-memory storage for tick data (in production, use Redis or similar)
+# In-memory storage for tick data and bot instances (in production, use Redis or similar)
 tick_storage: Dict[str, List[Dict]] = {}
 active_websockets: List[WebSocket] = []
+active_bots: Dict[str, Any] = {}
 
 # API Token management (in production, store in database with expiration)
 API_TOKENS = {
