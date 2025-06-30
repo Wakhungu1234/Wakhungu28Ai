@@ -261,15 +261,22 @@ class Wakhungu28AiWebService:
         self.bot_token = bot_token
         self.headers = {"Authorization": f"Bearer {bot_token}"}
         
-        # Use High-Frequency Trading Engine
-        self.trading_engine = HighFrequencyTradingEngine(config, analysis_api_url, bot_token)
+        # Choose trading engine based on configuration
+        if getattr(config, 'ultra_aggressive_mode', False) or config.trade_interval_seconds <= 5.0:
+            # Use ultra-aggressive engine for fast trading
+            self.trading_engine = UltraAggressiveTradingEngine(config, analysis_api_url, bot_token)
+            logger.info(f"🚀 Using ULTRA-AGGRESSIVE Trading Engine")
+        else:
+            # Use standard high-frequency engine
+            self.trading_engine = HighFrequencyTradingEngine(config, analysis_api_url, bot_token)
+            logger.info(f"🚀 Using High-Frequency Trading Engine")
         
         # Bot State
         self.is_running = False
         self.start_time = None
         
         logger.info(f"🚀 Enhanced Wakhungu28Ai Web Service initialized")
-        logger.info(f"⚡ High-Frequency Mode: {config.max_trades_per_hour}/hour target")
+        logger.info(f"⚡ Mode: {'ULTRA-AGGRESSIVE' if hasattr(self.trading_engine, 'start_aggressive_trading') else 'HIGH-FREQUENCY'}")
         logger.info(f"🎯 Market: {config.selected_market}")
         logger.info(f"📊 Contract: {config.trading_params.contract_type}")
         logger.info(f"💰 Stake: ${config.trading_params.stake}")
