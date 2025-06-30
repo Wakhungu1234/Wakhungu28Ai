@@ -252,7 +252,7 @@ class RiskManager:
         return True
 
 class Wakhungu28AiWebService:
-    """Web-based Wakhungu28Ai trading bot service"""
+    """Enhanced web-based Wakhungu28Ai trading bot service with high-frequency capabilities"""
     
     def __init__(self, config: BotConfig, analysis_api_url: str, bot_token: str):
         self.config = config
@@ -260,28 +260,22 @@ class Wakhungu28AiWebService:
         self.bot_token = bot_token
         self.headers = {"Authorization": f"Bearer {bot_token}"}
         
-        # AI Components
-        self.pattern_analyzer = AdvancedPatternAnalyzer()
-        self.risk_manager = RiskManager(config.initial_balance)
+        # Use High-Frequency Trading Engine
+        self.trading_engine = HighFrequencyTradingEngine(config, analysis_api_url, bot_token)
         
         # Bot State
         self.is_running = False
         self.start_time = None
-        self.trades_history: List[TradeResult] = []
-        self.performance_metrics = {
-            "total_trades": 0,
-            "winning_trades": 0,
-            "win_rate": 0.0,
-            "total_profit": 0.0,
-            "best_streak": 0,
-            "current_streak": 0
-        }
         
-        # Trading task
-        self.trading_task: Optional[asyncio.Task] = None
+        logger.info(f"🚀 Enhanced Wakhungu28Ai Web Service initialized")
+        logger.info(f"⚡ High-Frequency Mode: {config.max_trades_per_hour}/hour target")
+        logger.info(f"🎯 Market: {config.selected_market}")
+        logger.info(f"📊 Contract: {config.trading_params.contract_type}")
+        logger.info(f"💰 Stake: ${config.trading_params.stake}")
+        logger.info(f"🔄 Martingale: {'Enabled' if config.trading_params.martingale_enabled else 'Disabled'}")
     
     async def start_bot(self) -> bool:
-        """Start the trading bot"""
+        """Start the high-frequency trading bot"""
         if self.is_running:
             logger.warning("🤖 Bot is already running")
             return False
@@ -290,11 +284,17 @@ class Wakhungu28AiWebService:
             self.is_running = True
             self.start_time = datetime.now()
             
-            # Start trading loop
-            self.trading_task = asyncio.create_task(self._trading_loop())
+            # Start high-frequency trading engine
+            success = await self.trading_engine.start_high_frequency_trading()
             
-            logger.info(f"🚀 Wakhungu28Ai bot started - Target: 88%+ Win Rate")
-            return True
+            if success:
+                logger.info(f"🚀 High-Frequency Wakhungu28Ai bot started successfully")
+                logger.info(f"🎯 Target: {self.config.max_trades_per_hour} trades/hour")
+                logger.info(f"⚡ Interval: {self.config.trade_interval_seconds}s between trades")
+                return True
+            else:
+                self.is_running = False
+                return False
             
         except Exception as e:
             logger.error(f"❌ Failed to start bot: {e}")
@@ -302,7 +302,7 @@ class Wakhungu28AiWebService:
             return False
     
     async def stop_bot(self) -> bool:
-        """Stop the trading bot"""
+        """Stop the high-frequency trading bot"""
         if not self.is_running:
             logger.warning("🤖 Bot is not running")
             return False
@@ -310,15 +310,10 @@ class Wakhungu28AiWebService:
         try:
             self.is_running = False
             
-            # Cancel trading task
-            if self.trading_task:
-                self.trading_task.cancel()
-                try:
-                    await self.trading_task
-                except asyncio.CancelledError:
-                    pass
+            # Stop trading engine
+            await self.trading_engine.stop_trading()
             
-            logger.info("🛑 Wakhungu28Ai bot stopped")
+            logger.info("🛑 High-Frequency Wakhungu28Ai bot stopped")
             return True
             
         except Exception as e:
@@ -326,22 +321,68 @@ class Wakhungu28AiWebService:
             return False
     
     async def get_bot_status(self) -> BotStatus:
-        """Get current bot status"""
-        uptime_seconds = 0
-        if self.start_time:
-            uptime_seconds = int((datetime.now() - self.start_time).total_seconds())
-        
-        return BotStatus(
-            bot_id=self.config.id,
-            status="RUNNING" if self.is_running else "STOPPED",
-            current_balance=self.risk_manager.balance,
-            daily_profit_loss=self.risk_manager.daily_profit_loss,
-            total_trades=self.performance_metrics["total_trades"],
-            winning_trades=self.performance_metrics["winning_trades"],
-            win_rate=self.performance_metrics["win_rate"],
-            last_trade_time=self.trades_history[-1].execution_time if self.trades_history else None,
-            uptime_seconds=uptime_seconds
-        )
+        """Get current bot status from high-frequency engine"""
+        try:
+            status = self.trading_engine.get_status()
+            return status
+        except Exception as e:
+            logger.error(f"❌ Error getting bot status: {e}")
+            # Return default status
+            uptime_seconds = 0
+            if self.start_time:
+                uptime_seconds = int((datetime.now() - self.start_time).total_seconds())
+            
+            return BotStatus(
+                bot_id=self.config.id,
+                status="ERROR",
+                current_balance=self.config.initial_balance,
+                daily_profit_loss=0.0,
+                total_trades=0,
+                winning_trades=0,
+                win_rate=0.0,
+                current_streak=0,
+                best_streak=0,
+                uptime_seconds=uptime_seconds,
+                error_message=str(e)
+            )
+    
+    async def get_martingale_info(self) -> Dict:
+        """Get Martingale recovery information"""
+        try:
+            return self.trading_engine.get_martingale_info()
+        except Exception as e:
+            logger.error(f"❌ Error getting Martingale info: {e}")
+            return {
+                "is_recovering": False,
+                "current_level": 0,
+                "max_level": 0,
+                "total_amount_to_recover": 0.0,
+                "recovery_sequence": []
+            }
+    
+    async def update_config(self, update_data: Dict) -> bool:
+        """Update bot configuration"""
+        try:
+            # Update config object
+            for key, value in update_data.items():
+                if hasattr(self.config, key):
+                    setattr(self.config, key, value)
+                elif hasattr(self.config.trading_params, key):
+                    setattr(self.config.trading_params, key, value)
+            
+            # Update trading engine if running
+            if self.is_running:
+                # Stop and restart with new config
+                await self.stop_bot()
+                await asyncio.sleep(1)
+                await self.start_bot()
+            
+            logger.info(f"✅ Bot configuration updated: {list(update_data.keys())}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"❌ Error updating config: {e}")
+            return False
     
     async def _trading_loop(self):
         """Main trading loop"""
