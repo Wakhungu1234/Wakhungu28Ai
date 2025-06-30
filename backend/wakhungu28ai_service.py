@@ -292,13 +292,20 @@ class Wakhungu28AiWebService:
             self.is_running = True
             self.start_time = datetime.now()
             
-            # Start high-frequency trading engine
-            success = await self.trading_engine.start_high_frequency_trading()
+            # Start appropriate trading engine
+            if hasattr(self.trading_engine, 'start_aggressive_trading'):
+                # Ultra-aggressive mode
+                success = await self.trading_engine.start_aggressive_trading()
+                logger.info(f"🚀 ULTRA-AGGRESSIVE Wakhungu28Ai bot started")
+                logger.info(f"⚡ Trade every {getattr(self.trading_engine, 'trade_interval', 3)}s")
+            else:
+                # High-frequency mode
+                success = await self.trading_engine.start_high_frequency_trading()
+                logger.info(f"🚀 High-Frequency Wakhungu28Ai bot started")
+                logger.info(f"🎯 Target: {self.config.max_trades_per_hour} trades/hour")
             
             if success:
-                logger.info(f"🚀 High-Frequency Wakhungu28Ai bot started successfully")
-                logger.info(f"🎯 Target: {self.config.max_trades_per_hour} trades/hour")
-                logger.info(f"⚡ Interval: {self.config.trade_interval_seconds}s between trades")
+                logger.info(f"✅ Bot started successfully - Expect trades soon!")
                 return True
             else:
                 self.is_running = False
