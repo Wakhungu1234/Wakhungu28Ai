@@ -623,6 +623,79 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Background task to manage Deriv WebSocket connection
+async def start_deriv_connection():
+    """Start Deriv WebSocket connection and subscribe to symbols"""
+    try:
+        deriv_client = await get_deriv_client()
+        
+        # Add tick handler to store data
+        deriv_client.add_tick_handler(store_tick_data)
+        
+        # Subscribe to all volatility indices
+        for market in VOLATILITY_INDICES:
+            try:
+                await deriv_client.subscribe_to_ticks(market["symbol"])
+                logger.info(f"Subscribed to {market['symbol']}")
+                await asyncio.sleep(1)  # Avoid rate limiting
+            except Exception as e:
+                logger.error(f"Failed to subscribe to {market['symbol']}: {e}")
+        
+        # Keep connection alive
+        while deriv_client.is_connected:
+            await asyncio.sleep(30)  # Send ping every 30 seconds
+            try:
+                await deriv_client._send_ping()
+            except Exception as e:
+                logger.error(f"Failed to send ping: {e}")
+                break
+                
+    except Exception as e:
+        logger.error(f"Error in Deriv connection: {e}")
+        # Retry connection after 10 seconds
+        await asyncio.sleep(10)
+        asyncio.create_task(start_deriv_connection())
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize Deriv connection on startup"""
+    logger.info("🚀 Starting Wakhungu28Ai Trading Platform...")
+    logger.info("📡 Initializing Deriv WebSocket connection...")
+    
+    # Start Deriv connection in background
+    asyncio.create_task(start_deriv_connection())
+    
+    logger.info("✅ Wakhungu28Ai Trading Platform started successfully!")
+    logger.info("🌐 Web interface: Access your bot through the web dashboard")
+    logger.info("🤖 API: Bot management endpoints available at /api/bot/*")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown"""
+    logger.info("🛑 Shutting down Wakhungu28Ai Trading Platform...")
+    
+    try:
+        # Stop all active bots
+        active_bot_ids = get_all_active_bots()
+        for bot_id in active_bot_ids:
+            try:
+                await stop_bot_instance(bot_id)
+                logger.info(f"Stopped bot: {bot_id}")
+            except:
+                pass
+        
+        # Close Deriv connection
+        from deriv_client import deriv_client
+        if deriv_client:
+            await deriv_client.disconnect()
+    except:
+        pass
+    
+    # Close MongoDB connection
+    client.close()
+    
+    logger.info("✅ Wakhungu28Ai Trading Platform shutdown complete")
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
