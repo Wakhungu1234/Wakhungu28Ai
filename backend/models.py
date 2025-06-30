@@ -71,7 +71,7 @@ class BotConfig(BaseModel):
 class BotStatus(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     bot_id: str
-    status: str  # "RUNNING", "STOPPED", "PAUSED", "ERROR", "RECOVERING"
+    status: str  # "RUNNING", "STOPPED", "PAUSED", "ERROR", "TAKE_PROFIT_REACHED", "STOP_LOSS_REACHED"
     current_balance: float
     daily_profit_loss: float
     total_trades: int
@@ -83,6 +83,7 @@ class BotStatus(BaseModel):
     last_trade_time: Optional[datetime] = None
     trades_per_hour: float = 0.0
     error_message: Optional[str] = None
+    stop_reason: Optional[str] = None  # Reason for stopping (take_profit, stop_loss, user_stop, etc.)
     uptime_seconds: int = 0
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
