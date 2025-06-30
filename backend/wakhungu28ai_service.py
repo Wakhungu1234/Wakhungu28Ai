@@ -1,6 +1,6 @@
 """
-Wakhungu28Ai Web Service - Bot Management System
-Converts the local bot into a web-accessible service
+Wakhungu28Ai Web Service - Enhanced High-Frequency Bot Management System
+Ultra-fast trading with 10,000+ trades per day capability
 """
 
 import asyncio
@@ -13,8 +13,9 @@ from collections import deque, Counter
 from dataclasses import dataclass
 import requests
 
-from models import BotConfig, BotStatus, BotTrade
+from models import BotConfig, BotStatus, BotTrade, AdvancedBotCreateRequest, TradingParameters
 from analysis import analyze_ticks
+from high_frequency_ai import HighFrequencyTradingEngine
 
 logger = logging.getLogger('Wakhungu28AiService')
 
