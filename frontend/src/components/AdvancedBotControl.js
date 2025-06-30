@@ -11,7 +11,15 @@ const AdvancedBotControl = () => {
   const [botStatus, setBotStatus] = useState(null);
   const [martingaleInfo, setMartingaleInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [showAdvancedForm, setShowAdvancedForm] = useState(false);
+  const [showQuickStartForm, setShowQuickStartForm] = useState(false);
+  const [quickStartForm, setQuickStartForm] = useState({
+    deriv_api_token: "",
+    stake: 10.0,
+    take_profit: 500.0,
+    stop_loss: 200.0,
+    martingale_multiplier: 2.0,
+    max_martingale_steps: 5
+  });
   
   const [advancedForm, setAdvancedForm] = useState({
     bot_name: "Wakhungu28Ai-Pro",
