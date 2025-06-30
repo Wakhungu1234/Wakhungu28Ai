@@ -638,7 +638,7 @@ class Wakhungu28AiWebService:
             self.config.min_ai_score = max(55, self.config.min_ai_score - 1)
             logger.info(f"📉 Relaxed standards: Min Confidence={self.config.min_confidence}%, Min AI Score={self.config.min_ai_score}")
 
-# Global bot instance manager
+# Global bot instance manager - Import this into server.py
 active_bots: Dict[str, Wakhungu28AiWebService] = {}
 
 async def create_bot_instance(config: BotConfig, analysis_api_url: str, bot_token: str) -> str:
