@@ -336,9 +336,14 @@ class Wakhungu28AiWebService:
             return False
     
     async def get_bot_status(self) -> BotStatus:
-        """Get current bot status from high-frequency engine"""
+        """Get current bot status from trading engine"""
         try:
-            status = self.trading_engine.get_status()
+            if hasattr(self.trading_engine, 'get_aggressive_status'):
+                # Ultra-aggressive mode status
+                status = self.trading_engine.get_aggressive_status()
+            else:
+                # High-frequency mode status
+                status = self.trading_engine.get_status()
             return status
         except Exception as e:
             logger.error(f"❌ Error getting bot status: {e}")
