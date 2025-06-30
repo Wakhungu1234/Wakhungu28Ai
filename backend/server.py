@@ -25,7 +25,7 @@ from deriv_client import get_deriv_client
 from analysis import analyze_ticks
 from wakhungu28ai_service import (
     create_bot_instance, start_bot_instance, stop_bot_instance,
-    get_bot_status, delete_bot_instance, get_all_active_bots
+    get_bot_status, delete_bot_instance, get_all_active_bots, active_bots
 )
 
 ROOT_DIR = Path(__file__).parent
