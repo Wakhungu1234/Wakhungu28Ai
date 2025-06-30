@@ -243,12 +243,29 @@ const AdvancedBotControl = () => {
           {bots.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-400 mb-4">No high-frequency bots yet</p>
-              <button
-                onClick={() => setShowAdvancedForm(true)}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium"
-              >
-                Create Your First Pro Bot
-              </button>
+              
+              {/* Quick Start Option */}
+              <div className="space-y-3">
+                <button
+                  onClick={() => setShowAdvancedForm(true)}
+                  className="block w-full bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium mb-2"
+                >
+                  Create Custom Pro Bot
+                </button>
+                
+                <div className="text-sm text-gray-400 mb-2">OR</div>
+                
+                <button
+                  onClick={createQuickStartBot}
+                  disabled={isLoading}
+                  className="block w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 disabled:opacity-50 text-white px-6 py-3 rounded-lg font-medium transition-all"
+                >
+                  {isLoading ? "Creating..." : "🚀 QUICK START - Trade NOW!"}
+                </button>
+                <p className="text-xs text-gray-400">
+                  Ultra-aggressive mode • Trades every 3 seconds • Starts immediately
+                </p>
+              </div>
             </div>
           ) : (
             <div className="space-y-3">
