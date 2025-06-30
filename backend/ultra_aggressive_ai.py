@@ -34,32 +34,6 @@ class AggressiveSignal:
 class UltraAggressiveTradingEngine:
     """Ultra-aggressive trading engine that takes trades every few seconds"""
     
-    def _should_continue_trading(self) -> bool:
-        """Check if trading should continue with enhanced stop loss/take profit"""
-        # Check take profit from config
-        if (self.config.trading_params.take_profit and 
-            self.daily_profit_loss >= self.config.trading_params.take_profit):
-            logger.info(f"🎯 Take profit reached: ${self.daily_profit_loss:.2f} >= ${self.config.trading_params.take_profit:.2f}")
-            return False
-        
-        # Check stop loss from config
-        if (self.config.trading_params.stop_loss and 
-            self.daily_profit_loss <= -self.config.trading_params.stop_loss):
-            logger.warning(f"🛑 Stop loss reached: ${self.daily_profit_loss:.2f} <= -${self.config.trading_params.stop_loss:.2f}")
-            return False
-        
-        # Check daily loss limit (backup safety)
-        daily_loss_limit = self.balance * 0.2  # 20% of balance
-        if self.daily_profit_loss < -daily_loss_limit:
-            logger.warning(f"🛑 Daily loss limit reached: ${self.daily_profit_loss:.2f}")
-            return False
-        
-        # Check minimum balance
-        if self.balance < 50:  # Minimum $50 balance
-            logger.warning(f"🛑 Balance too low: ${self.balance:.2f}")
-            return False
-        
-        return True
     def __init__(self, config: BotConfig, analysis_api_url: str, bot_token: str):
         self.config = config
         self.analysis_api_url = analysis_api_url
