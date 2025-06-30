@@ -689,8 +689,8 @@ const AdvancedBotControl = () => {
               </button>
               <button
                 onClick={createAdvancedBot}
-                disabled={isLoading || !advancedForm.deriv_api_token}
-                className="flex-1 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:opacity-50 text-white py-3 px-4 rounded-lg font-medium transition-all"
+                disabled={isLoading || !advancedForm.deriv_api_token.trim()}
+                className="flex-1 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 px-4 rounded-lg font-medium transition-all"
               >
                 {isLoading ? "Creating..." : "🚀 Create High-Frequency Bot"}
               </button>
