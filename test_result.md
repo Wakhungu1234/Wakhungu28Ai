@@ -257,6 +257,7 @@ test_plan:
     - "API Integration"
     - "Advanced Bot Control Panel"
     - "Advanced Bot Creation Form"
+    - "Enhanced Quick Start Feature"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
