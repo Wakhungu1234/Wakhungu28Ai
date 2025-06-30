@@ -234,6 +234,8 @@ test_plan:
     - "AI Bot Control Panel"
     - "UI/UX Elements"
     - "API Integration"
+    - "Advanced Bot Control Panel"
+    - "Advanced Bot Creation Form"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
