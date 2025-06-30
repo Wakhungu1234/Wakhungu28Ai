@@ -142,9 +142,11 @@ const AdvancedBotControl = () => {
   };
 
   const createQuickStartBot = async () => {
-    const apiToken = prompt("🚀 QUICK START ULTRA-AGGRESSIVE BOT\n\nEnter your Deriv API Token to start trading immediately:\n(Bot will trade every 3 seconds with aggressive settings)");
-    
-    if (!apiToken || !apiToken.trim()) {
+    setShowQuickStartForm(true);
+  };
+
+  const executeQuickStartBot = async () => {
+    if (!quickStartForm.deriv_api_token || !quickStartForm.deriv_api_token.trim()) {
       alert("API Token is required for Quick Start mode");
       return;
     }
@@ -152,26 +154,47 @@ const AdvancedBotControl = () => {
     setIsLoading(true);
     try {
       const response = await axios.post(`${API}/bot/quick-start`, {
-        deriv_api_token: apiToken.trim(),
-        initial_balance: 1000,
-        stake: 10
+        deriv_api_token: quickStartForm.deriv_api_token.trim(),
+        stake: quickStartForm.stake,
+        take_profit: quickStartForm.take_profit,
+        stop_loss: quickStartForm.stop_loss,
+        martingale_multiplier: quickStartForm.martingale_multiplier,
+        max_martingale_steps: quickStartForm.max_martingale_steps
       });
       
       if (response.data.status === "success") {
         await fetchBots();
+        setShowQuickStartForm(false);
+        
+        // Reset form
+        setQuickStartForm({
+          deriv_api_token: "",
+          stake: 10.0,
+          take_profit: 500.0,
+          stop_loss: 200.0,
+          martingale_multiplier: 2.0,
+          max_martingale_steps: 5
+        });
         
         // Select the newly created bot
         const newBot = bots.find(bot => bot.id === response.data.bot_id);
         if (newBot) setSelectedBot(newBot);
         
-        alert(`🚀 ULTRA-AGGRESSIVE BOT STARTED!\n\n✅ Bot: ${response.data.message}\n⚡ Trade Interval: ${response.data.features.trade_interval}\n🎯 Expected Trades/Hour: ${response.data.features.expected_trades_per_hour}\n🔥 ${response.data.features.first_trade_expected}\n\n⚠️ VERY AGGRESSIVE SETTINGS - Monitor closely!`);
+        alert(`🚀 ULTRA-AGGRESSIVE BOT STARTED!\n\n✅ Bot: ${response.data.message}\n⚡ Trade Interval: ${response.data.features.trade_interval}\n🎯 Expected Trades/Hour: ${response.data.features.expected_trades_per_hour}\n💰 Stake: $${quickStartForm.stake}\n📈 Take Profit: $${quickStartForm.take_profit}\n📉 Stop Loss: $${quickStartForm.stop_loss}\n🔄 Martingale: ${quickStartForm.martingale_multiplier}x (${quickStartForm.max_martingale_steps} steps)\n🔥 ${response.data.features.first_trade_expected}\n\n⚠️ ULTRA-AGGRESSIVE SETTINGS - Monitor closely!`);
       }
     } catch (error) {
       console.error("Error creating quick start bot:", error);
-      alert("Failed to create Quick Start bot. Please check your API token and try again.");
+      alert("Failed to create Quick Start bot. Please check your settings and API token.");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleQuickStartChange = (field, value) => {
+    setQuickStartForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   const startBot = async () => {
