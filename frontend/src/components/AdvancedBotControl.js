@@ -684,11 +684,13 @@ const AdvancedBotControl = () => {
                 <h4 className="text-sm font-semibold text-blue-400 mb-2">⚡ Ultra-Aggressive Settings</h4>
                 <div className="grid grid-cols-2 gap-2 text-xs text-gray-300">
                   <div>🎯 Trade Interval: 3 seconds</div>
-                  <div>📊 Market: R_100 (Auto)</div>
+                  <div>📊 Market: {quickStartForm.selected_market}</div>
                   <div>🤖 Contract: Auto-Best</div>
                   <div>⚡ Trades/Hour: ~1,200</div>
                   <div>🧠 Confidence: 50% (Low)</div>
                   <div>📈 Expected Daily: 28,800</div>
+                  <div>💰 Stake: ${quickStartForm.stake}</div>
+                  <div>🔄 Martingale: {quickStartForm.martingale_multiplier}x</div>
                 </div>
               </div>
             </div>
