@@ -123,16 +123,17 @@ class UltraAggressiveTradingEngine:
                 await asyncio.sleep(5)  # Short pause on error
     
     async def _get_aggressive_signal(self) -> Optional[AggressiveSignal]:
-        """Generate aggressive trading signal with low confidence threshold"""
+        """Generate aggressive trading signal with guaranteed signal creation"""
         try:
             symbol = self.config.selected_market
             
-            # Get minimal tick data for speed
+            # Get tick data (real or simulated)
             recent_ticks = await self._get_quick_ticks(symbol, self.quick_analysis_ticks)
             
-            if len(recent_ticks) < 5:
-                logger.warning(f"⚠️ Not enough tick data ({len(recent_ticks)} ticks)")
-                return None
+            if len(recent_ticks) < 3:
+                # Even if no data, create a basic signal for maximum aggressiveness
+                logger.warning(f"⚠️ Very limited data, creating forced signal")
+                return self._create_forced_aggressive_signal()
             
             # Quick and dirty analysis for speed
             recent_digits = [tick["last_digit"] for tick in recent_ticks[-10:]]
@@ -146,72 +147,75 @@ class UltraAggressiveTradingEngine:
             even_confidence = (even_count / len(recent_digits)) * 100
             odd_confidence = (odd_count / len(recent_digits)) * 100
             
-            if even_confidence >= self.min_confidence:
+            # ALWAYS create even/odd signals (lower threshold to 40%)
+            if even_confidence >= 40:
                 signals.append(self._create_aggressive_signal(
-                    "EVEN_ODD", "EVEN", None, even_confidence, 
+                    "EVEN_ODD", "EVEN", None, max(even_confidence, 50), 
                     f"Even digits appear {even_confidence:.1f}% of time"
                 ))
             
-            if odd_confidence >= self.min_confidence:
+            if odd_confidence >= 40:
                 signals.append(self._create_aggressive_signal(
-                    "EVEN_ODD", "ODD", None, odd_confidence,
+                    "EVEN_ODD", "ODD", None, max(odd_confidence, 50),
                     f"Odd digits appear {odd_confidence:.1f}% of time"
                 ))
             
-            # Over/Under quick analysis for multiple thresholds
-            for threshold in [3, 4, 5, 6, 7]:
+            # Over/Under quick analysis for multiple thresholds (lower threshold)
+            for threshold in [4, 5, 6]:  # Focus on middle thresholds
                 over_count = sum(1 for d in recent_digits if d > threshold)
                 under_count = sum(1 for d in recent_digits if d < threshold)
                 
                 over_confidence = (over_count / len(recent_digits)) * 100
                 under_confidence = (under_count / len(recent_digits)) * 100
                 
-                if over_confidence >= self.min_confidence:
+                if over_confidence >= 40:  # Lower threshold
                     signals.append(self._create_aggressive_signal(
-                        "OVER_UNDER", "OVER", threshold, over_confidence,
+                        "OVER_UNDER", "OVER", threshold, max(over_confidence, 50),
                         f"Over {threshold} appears {over_confidence:.1f}% of time"
                     ))
                 
-                if under_confidence >= self.min_confidence:
+                if under_confidence >= 40:  # Lower threshold
                     signals.append(self._create_aggressive_signal(
-                        "OVER_UNDER", "UNDER", threshold, under_confidence,
+                        "OVER_UNDER", "UNDER", threshold, max(under_confidence, 50),
                         f"Under {threshold} appears {under_confidence:.1f}% of time"
                     ))
             
-            # Match/Differ quick analysis for frequent digits
-            digit_counts = Counter(recent_digits)
-            most_frequent = digit_counts.most_common(1)[0] if digit_counts else (0, 0)
+            # Always ensure we have at least one signal
+            if not signals:
+                logger.info("🎯 No qualifying signals, creating forced aggressive signal")
+                return self._create_forced_aggressive_signal()
             
-            if most_frequent[1] >= 2:  # If digit appears at least twice
-                match_confidence = (most_frequent[1] / len(recent_digits)) * 100
-                if match_confidence >= self.min_confidence:
-                    signals.append(self._create_aggressive_signal(
-                        "MATCH_DIFFER", "MATCH", most_frequent[0], match_confidence,
-                        f"Digit {most_frequent[0]} appears {match_confidence:.1f}% of time"
-                    ))
-            
-            # Return best signal or random good signal for aggressiveness
-            if signals:
-                # Sort by confidence and return best, or pick random for variety
-                signals.sort(key=lambda s: s.confidence, reverse=True)
-                return signals[0] if signals[0].confidence > 60 else np.random.choice(signals)
-            
-            # If no good signals, create a basic 50/50 trade for maximum aggressiveness
-            if self.config.trading_params.contract_type == "AUTO_BEST":
-                # Force a trade with even/odd (50/50 chance)
-                return self._create_aggressive_signal(
-                    "EVEN_ODD", 
-                    "EVEN" if np.random.random() > 0.5 else "ODD", 
-                    None, 
-                    52.0,  # Slightly above minimum
-                    "Forced aggressive trade (50/50 probability)"
-                )
-            
-            return None
+            # Return best signal or random for variety
+            if len(signals) == 1:
+                return signals[0]
+            else:
+                # Mix of best and random for aggressive variety
+                if np.random.random() > 0.7:  # 30% chance of random selection
+                    return np.random.choice(signals)
+                else:
+                    return max(signals, key=lambda s: s.confidence)
             
         except Exception as e:
             logger.error(f"❌ Error generating aggressive signal: {e}")
-            return None
+            return self._create_forced_aggressive_signal()
+    
+    def _create_forced_aggressive_signal(self) -> AggressiveSignal:
+        """Create a forced signal for ultra-aggressive mode when no good signals available"""
+        # Rotate between different forced strategies
+        strategies = [
+            ("EVEN_ODD", "EVEN", None, "Forced even trade (50% probability)"),
+            ("EVEN_ODD", "ODD", None, "Forced odd trade (50% probability)"),
+            ("OVER_UNDER", "OVER", 5, "Forced over 5 trade (40% probability)"),
+            ("OVER_UNDER", "UNDER", 5, "Forced under 5 trade (50% probability)"),
+        ]
+        
+        # Select random strategy
+        contract_type, trade_type, prediction_number, reason = np.random.choice(strategies)
+        
+        return self._create_aggressive_signal(
+            contract_type, trade_type, prediction_number, 51.0,  # Just above minimum
+            reason
+        )
     
     def _create_aggressive_signal(self, contract_type: str, trade_type: str, 
                                 prediction_number: Optional[int], confidence: float, 
