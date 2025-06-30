@@ -642,7 +642,7 @@ class Wakhungu28AiWebService:
 active_bots: Dict[str, Wakhungu28AiWebService] = {}
 
 async def create_bot_instance(config: BotConfig, analysis_api_url: str, bot_token: str) -> str:
-    """Create a new bot instance"""
+    """Create a new high-frequency bot instance"""
     bot_id = config.id
     
     if bot_id in active_bots:
@@ -651,7 +651,9 @@ async def create_bot_instance(config: BotConfig, analysis_api_url: str, bot_toke
     bot_service = Wakhungu28AiWebService(config, analysis_api_url, bot_token)
     active_bots[bot_id] = bot_service
     
-    logger.info(f"🤖 Created bot instance: {bot_id}")
+    logger.info(f"🤖 Created high-frequency bot instance: {bot_id}")
+    logger.info(f"⚡ Max trades/hour: {config.max_trades_per_hour}")
+    logger.info(f"🎯 Market: {config.selected_market}")
     return bot_id
 
 async def start_bot_instance(bot_id: str) -> bool:
