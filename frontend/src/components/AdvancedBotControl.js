@@ -413,13 +413,23 @@ const AdvancedBotControl = () => {
 
               <div className="grid grid-cols-1 gap-3">
                 {!selectedBot.is_active ? (
-                  <button
-                    onClick={startBot}
-                    disabled={isLoading}
-                    className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:opacity-50 text-white py-3 px-4 rounded-lg font-medium transition-all"
-                  >
-                    {isLoading ? "Starting..." : "🚀 Start High-Frequency Trading"}
-                  </button>
+                  <div className="space-y-3">
+                    <button
+                      onClick={startBot}
+                      disabled={isLoading}
+                      className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:opacity-50 text-white py-3 px-4 rounded-lg font-medium transition-all"
+                    >
+                      {isLoading ? "Starting..." : "🚀 Start High-Frequency Trading"}
+                    </button>
+                    
+                    <button
+                      onClick={resumeBot}
+                      disabled={isLoading}
+                      className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 disabled:opacity-50 text-white py-3 px-4 rounded-lg font-medium transition-all"
+                    >
+                      {isLoading ? "Resuming..." : "▶️ RESUME TRADING"}
+                    </button>
+                  </div>
                 ) : (
                   <button
                     onClick={stopBot}
