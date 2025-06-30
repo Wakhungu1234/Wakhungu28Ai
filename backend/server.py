@@ -18,7 +18,8 @@ from datetime import datetime, timedelta
 
 from models import (
     VolatilityIndex, TickData, TickAnalysis, PredictionRequest,
-    BotConfig, BotStatus, BotTrade, BotCreateRequest, BotUpdateRequest
+    BotConfig, BotStatus, BotTrade, BotCreateRequest, BotUpdateRequest,
+    AdvancedBotCreateRequest, TradingParameters
 )
 from deriv_client import get_deriv_client
 from analysis import analyze_ticks
