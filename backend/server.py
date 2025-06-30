@@ -740,15 +740,22 @@ async def create_advanced_bot(request: AdvancedBotCreateRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.post("/bot/quick-start")
-async def create_quick_start_bot(deriv_api_token: str, initial_balance: float = 1000.0, stake: float = 10.0):
+async def create_quick_start_bot(request: dict):
     """Quick start bot with ultra-aggressive settings for immediate trading"""
     try:
+        deriv_api_token = request.get("deriv_api_token", "")
+        initial_balance = request.get("initial_balance", 1000.0)
+        stake = request.get("stake", 10.0)
+        
+        if not deriv_api_token or not deriv_api_token.strip():
+            raise HTTPException(status_code=400, detail="Deriv API token is required")
+        
         # Ultra-aggressive quick start configuration
         trading_params = TradingParameters(
             contract_type="AUTO_BEST",
             trade_type="AUTO",
             prediction_number=None,
-            stake=stake,
+            stake=float(stake),
             stop_loss=None,
             take_profit=None,
             ticks_count=5,
@@ -759,17 +766,19 @@ async def create_quick_start_bot(deriv_api_token: str, initial_balance: float = 
         
         config = BotConfig(
             bot_name="QuickStart-UltraAggressive",
-            initial_balance=initial_balance,
-            deriv_api_token=deriv_api_token,
+            initial_balance=float(initial_balance),
+            deriv_api_token=deriv_api_token.strip(),
             min_confidence=50.0,  # Very low for frequent trades
             selected_market="R_100",  # Popular market
             trading_params=trading_params,
             max_trades_per_hour=1200,  # Maximum frequency
             trade_interval_seconds=3.0,  # 3 seconds between trades
             quick_analysis_mode=True,
-            auto_recovery_mode=True,
-            ultra_aggressive_mode=True
+            auto_recovery_mode=True
         )
+        
+        # Add ultra-aggressive flag
+        config.ultra_aggressive_mode = True
         
         # Store bot config in database
         await db.bot_configs.insert_one(config.dict())
