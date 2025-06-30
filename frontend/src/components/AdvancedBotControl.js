@@ -582,6 +582,26 @@ const AdvancedBotControl = () => {
                 </p>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  📊 Trading Market
+                </label>
+                <select
+                  value={quickStartForm.selected_market}
+                  onChange={(e) => handleQuickStartChange('selected_market', e.target.value)}
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white"
+                >
+                  {configOptions?.markets?.map(market => (
+                    <option key={market.value} value={market.value} className="bg-gray-800">
+                      {market.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-400 mt-1">
+                  Choose your preferred volatility index
+                </p>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
