@@ -522,6 +522,144 @@ const AdvancedBotControl = () => {
         </div>
       </div>
 
+      {/* Quick Start Form Modal */}
+      {showQuickStartForm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 rounded-lg p-6 w-full max-w-md border border-white/20">
+            <h3 className="text-xl font-semibold text-white mb-4">
+              🚀 QUICK START - Ultra-Aggressive Bot
+            </h3>
+            <p className="text-sm text-gray-300 mb-6">
+              Configure your ultra-aggressive trading bot for immediate execution
+            </p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  🔑 Deriv API Token *
+                </label>
+                <input
+                  type="password"
+                  value={quickStartForm.deriv_api_token}
+                  onChange={(e) => handleQuickStartChange('deriv_api_token', e.target.value)}
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white"
+                  placeholder="Required for trading"
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Get from Deriv.com → Settings → API Token
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    💰 Stake Amount ($)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="1"
+                    max="1000"
+                    value={quickStartForm.stake}
+                    onChange={(e) => handleQuickStartChange('stake', parseFloat(e.target.value))}
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    📈 Take Profit ($)
+                  </label>
+                  <input
+                    type="number"
+                    step="10"
+                    min="10"
+                    value={quickStartForm.take_profit}
+                    onChange={(e) => handleQuickStartChange('take_profit', parseFloat(e.target.value))}
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    📉 Stop Loss ($)
+                  </label>
+                  <input
+                    type="number"
+                    step="10"
+                    min="10"
+                    value={quickStartForm.stop_loss}
+                    onChange={(e) => handleQuickStartChange('stop_loss', parseFloat(e.target.value))}
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    🔄 Martingale Multiplier
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="1.1"
+                    max="5.0"
+                    value={quickStartForm.martingale_multiplier}
+                    onChange={(e) => handleQuickStartChange('martingale_multiplier', parseFloat(e.target.value))}
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  🔢 Max Martingale Steps
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={quickStartForm.max_martingale_steps}
+                  onChange={(e) => handleQuickStartChange('max_martingale_steps', parseInt(e.target.value))}
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white"
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Maximum recovery steps before reset
+                </p>
+              </div>
+
+              {/* Quick Start Summary */}
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
+                <h4 className="text-sm font-semibold text-blue-400 mb-2">⚡ Ultra-Aggressive Settings</h4>
+                <div className="grid grid-cols-2 gap-2 text-xs text-gray-300">
+                  <div>🎯 Trade Interval: 3 seconds</div>
+                  <div>📊 Market: R_100 (Auto)</div>
+                  <div>🤖 Contract: Auto-Best</div>
+                  <div>⚡ Trades/Hour: ~1,200</div>
+                  <div>🧠 Confidence: 50% (Low)</div>
+                  <div>📈 Expected Daily: 28,800</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => setShowQuickStartForm(false)}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={executeQuickStartBot}
+                disabled={isLoading || !quickStartForm.deriv_api_token.trim()}
+                className="flex-1 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 px-4 rounded-lg font-medium transition-all"
+              >
+                {isLoading ? "Creating..." : "🚀 START TRADING NOW"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Advanced Bot Creation Form */}
       {showAdvancedForm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
