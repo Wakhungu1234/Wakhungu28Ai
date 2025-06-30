@@ -687,12 +687,15 @@ async def create_advanced_bot(request: AdvancedBotCreateRequest):
             max_martingale_steps=request.max_martingale_steps
         )
         
+        # Enable ultra-aggressive mode for fast intervals
+        ultra_aggressive_mode = request.trade_interval_seconds <= 5.0
+        
         # Create enhanced bot configuration
         config = BotConfig(
             bot_name=request.bot_name,
             initial_balance=request.initial_balance,
             deriv_api_token=request.deriv_api_token,
-            min_confidence=request.min_confidence,
+            min_confidence=max(50.0, request.min_confidence) if ultra_aggressive_mode else request.min_confidence,
             selected_market=request.selected_market,
             trading_params=trading_params,
             max_trades_per_hour=request.max_trades_per_hour,
@@ -700,6 +703,11 @@ async def create_advanced_bot(request: AdvancedBotCreateRequest):
             quick_analysis_mode=True,
             auto_recovery_mode=True
         )
+        
+        # Add ultra-aggressive flag if needed
+        if ultra_aggressive_mode:
+            config.ultra_aggressive_mode = True
+            logger.info(f"🚀 ULTRA-AGGRESSIVE MODE enabled for {config.bot_name}")
         
         # Store bot config in database
         await db.bot_configs.insert_one(config.dict())
@@ -712,20 +720,86 @@ async def create_advanced_bot(request: AdvancedBotCreateRequest):
         
         return {
             "status": "success",
-            "message": "High-Frequency Wakhungu28Ai bot created successfully",
+            "message": f"{'Ultra-Aggressive' if ultra_aggressive_mode else 'High-Frequency'} Wakhungu28Ai bot created successfully",
             "bot_id": bot_id,
             "config": config.dict(),
             "features": {
                 "high_frequency": True,
+                "ultra_aggressive": ultra_aggressive_mode,
                 "max_trades_per_day": config.max_trades_per_hour * 24,
+                "trade_interval_seconds": config.trade_interval_seconds,
                 "martingale_recovery": config.trading_params.martingale_enabled,
                 "ai_analysis": True,
-                "risk_management": True
+                "risk_management": True,
+                "immediate_trading": ultra_aggressive_mode
             }
         }
         
     except Exception as e:
         logger.error(f"Error creating advanced bot: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/bot/quick-start")
+async def create_quick_start_bot(deriv_api_token: str, initial_balance: float = 1000.0, stake: float = 10.0):
+    """Quick start bot with ultra-aggressive settings for immediate trading"""
+    try:
+        # Ultra-aggressive quick start configuration
+        trading_params = TradingParameters(
+            contract_type="AUTO_BEST",
+            trade_type="AUTO",
+            prediction_number=None,
+            stake=stake,
+            stop_loss=None,
+            take_profit=None,
+            ticks_count=5,
+            martingale_enabled=True,
+            martingale_multiplier=2.0,
+            max_martingale_steps=3
+        )
+        
+        config = BotConfig(
+            bot_name="QuickStart-UltraAggressive",
+            initial_balance=initial_balance,
+            deriv_api_token=deriv_api_token,
+            min_confidence=50.0,  # Very low for frequent trades
+            selected_market="R_100",  # Popular market
+            trading_params=trading_params,
+            max_trades_per_hour=1200,  # Maximum frequency
+            trade_interval_seconds=3.0,  # 3 seconds between trades
+            quick_analysis_mode=True,
+            auto_recovery_mode=True,
+            ultra_aggressive_mode=True
+        )
+        
+        # Store bot config in database
+        await db.bot_configs.insert_one(config.dict())
+        
+        # Create and start bot immediately
+        analysis_api_url = os.environ.get('REACT_APP_BACKEND_URL', 'http://localhost:8001').replace('//', '//').rstrip('/')
+        bot_token = "bot_token_demo_123"
+        
+        bot_id = await create_bot_instance(config, analysis_api_url, bot_token)
+        
+        # Auto-start the bot
+        await start_bot_instance(bot_id)
+        
+        return {
+            "status": "success",
+            "message": "🚀 ULTRA-AGGRESSIVE QuickStart bot created and started!",
+            "bot_id": bot_id,
+            "auto_started": True,
+            "features": {
+                "ultra_aggressive": True,
+                "trade_interval": "3 seconds",
+                "expected_trades_per_hour": "1200",
+                "immediate_trading": True,
+                "first_trade_expected": "Within 10 seconds"
+            },
+            "note": "Bot will start trading immediately with very aggressive settings!"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error creating quick start bot: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/bot/{bot_id}/martingale-info")
