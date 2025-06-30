@@ -220,6 +220,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Advanced Bot Creation Form includes all required fields: Bot Name, Initial Balance, Deriv API Token, Market, Contract Type, Trade Type, Stake, Ticks, Max Trades/Hour, Trade Interval, Min Confidence, and Enable Martingale Recovery. Minor issue: Create button is not disabled when API token is empty as it should be. Form can be cancelled successfully."
+      - working: true
+        agent: "testing"
+        comment: "Retested the Advanced Bot Creation Form. All dropdown menus are now populated correctly. Market dropdown shows 10 markets as expected. Contract Type dropdown shows 4 options. Trade Type dropdown changes based on contract type selection. Ticks dropdown shows numbers 1-30. Prediction number dropdown appears when relevant trade types are selected. The Create High-Frequency Bot button is correctly enabled when API token is filled. Martingale settings are visible when enabled. All form fields and dependencies are working properly."
 
 metadata:
   created_by: "main_agent"
