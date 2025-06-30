@@ -15,6 +15,7 @@ const AdvancedBotControl = () => {
   const [showAdvancedForm, setShowAdvancedForm] = useState(false);
   const [quickStartForm, setQuickStartForm] = useState({
     deriv_api_token: "",
+    selected_market: "R_100",
     stake: 10.0,
     take_profit: 500.0,
     stop_loss: 200.0,
