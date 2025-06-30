@@ -157,6 +157,7 @@ const AdvancedBotControl = () => {
     try {
       const response = await axios.post(`${API}/bot/quick-start`, {
         deriv_api_token: quickStartForm.deriv_api_token.trim(),
+        selected_market: quickStartForm.selected_market,
         stake: quickStartForm.stake,
         take_profit: quickStartForm.take_profit,
         stop_loss: quickStartForm.stop_loss,
