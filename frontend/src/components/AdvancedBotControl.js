@@ -232,6 +232,24 @@ const AdvancedBotControl = () => {
     }
   };
 
+  const resumeBot = async () => {
+    if (!selectedBot) return;
+    
+    setIsLoading(true);
+    try {
+      await axios.post(`${API}/bot/${selectedBot.id}/start`);
+      await fetchBots();
+      await fetchBotStatus();
+      
+      alert(`🚀 BOT RESUMED!\n\nTrading has been resumed for "${selectedBot.bot_name}"\n⚡ Ultra-aggressive trading will continue immediately!`);
+    } catch (error) {
+      console.error("Error resuming bot:", error);
+      alert("Failed to resume bot. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const deleteBot = async () => {
     if (!selectedBot) return;
     
