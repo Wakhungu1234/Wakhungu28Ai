@@ -63,6 +63,7 @@ class BotConfig(BaseModel):
     trade_interval_seconds: float = 0.3  # 300ms between trades (very fast)
     quick_analysis_mode: bool = True  # Use faster analysis
     auto_recovery_mode: bool = True
+    ultra_aggressive_mode: bool = False  # New field for ultra-aggressive trading
     
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
