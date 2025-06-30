@@ -75,6 +75,10 @@ function App() {
                 path="/bot" 
                 element={<BotControlPanel />} 
               />
+              <Route 
+                path="/advanced-bot" 
+                element={<AdvancedBotControl />} 
+              />
             </Routes>
           </main>
 
