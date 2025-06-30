@@ -12,6 +12,7 @@ const AdvancedBotControl = () => {
   const [martingaleInfo, setMartingaleInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showQuickStartForm, setShowQuickStartForm] = useState(false);
+  const [showAdvancedForm, setShowAdvancedForm] = useState(false);
   const [quickStartForm, setQuickStartForm] = useState({
     deriv_api_token: "",
     stake: 10.0,
