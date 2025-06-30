@@ -6,6 +6,7 @@ import axios from "axios";
 // Import components
 import TradingDashboard from "./components/TradingDashboard";
 import BotControlPanel from "./components/BotControlPanel";
+import AdvancedBotControl from "./components/AdvancedBotControl";
 import Navigation from "./components/Navigation";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
