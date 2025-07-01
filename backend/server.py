@@ -345,7 +345,9 @@ async def stop_bot(bot_id: str):
     except Exception as e:
         logger.error(f"Error stopping bot: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-    """Restart a stopped trading bot"""
+
+@api_router.put("/bots/{bot_id}/restart")
+async def restart_bot(bot_id: str):
     try:
         # Check if bot exists
         bot_config = await db.bot_configs.find_one({"id": bot_id})
