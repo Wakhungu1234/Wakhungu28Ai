@@ -406,6 +406,13 @@ def test_bot_trades(bot_id):
             assert "trades" in data, "Trades missing from response"
             assert "count" in data, "Count missing from response"
             
+            # Check martingale tracking in trades if any trades exist
+            if data.get("count", 0) > 0:
+                for trade in data["trades"]:
+                    assert "martingale_step" in trade, "Martingale step missing from trade record"
+                    assert "martingale_repeat" in trade, "Martingale repeat missing from trade record"
+                print("✅ Enhanced Martingale Recovery System: PASSED - Trades include martingale tracking")
+            
             print("✅ Bot Trades Endpoint: PASSED")
             return True
         else:
