@@ -507,6 +507,100 @@ def test_error_handling():
     print("✅ Error Handling: PASSED")
     return True
 
+def test_minimum_stake_validation():
+    """Test minimum stake validation ($0.35 minimum)"""
+    print("\n=== Testing Minimum Stake Validation ===")
+    try:
+        # Test with valid minimum stake
+        valid_config = {
+            "api_token": "test_token_123",
+            "stake_amount": 0.35,  # Minimum valid stake
+            "take_profit": 100.0,
+            "stop_loss": 50.0,
+            "martingale_multiplier": 2.0,
+            "max_martingale_steps": 3,
+            "selected_markets": ["R_100"]
+        }
+        
+        response = requests.post(
+            f"{API_URL}/bots/quickstart", 
+            json=valid_config
+        )
+        print(f"Valid minimum stake - Status Code: {response.status_code}")
+        assert response.status_code == 200, "Valid minimum stake rejected"
+        
+        # Test with invalid stake (below minimum)
+        invalid_config = {
+            "api_token": "test_token_123",
+            "stake_amount": 0.34,  # Below minimum
+            "take_profit": 100.0,
+            "stop_loss": 50.0,
+            "martingale_multiplier": 2.0,
+            "max_martingale_steps": 3,
+            "selected_markets": ["R_100"]
+        }
+        
+        response = requests.post(
+            f"{API_URL}/bots/quickstart", 
+            json=invalid_config
+        )
+        print(f"Invalid stake - Status Code: {response.status_code}")
+        assert response.status_code in [400, 422], f"Expected 400 or 422 for invalid stake, got {response.status_code}"
+        
+        print("✅ Minimum Stake Validation: PASSED - $0.35 minimum stake enforced")
+        return True
+    except Exception as e:
+        print(f"❌ Minimum Stake Validation: FAILED - {str(e)}")
+        return False
+
+def test_martingale_repeat_attempts_validation():
+    """Test martingale repeat attempts validation (1-5 range)"""
+    print("\n=== Testing Martingale Repeat Attempts Validation ===")
+    try:
+        # Test with valid repeat attempts
+        valid_config = {
+            "api_token": "test_token_123",
+            "stake_amount": 1.0,
+            "take_profit": 100.0,
+            "stop_loss": 50.0,
+            "martingale_multiplier": 2.0,
+            "max_martingale_steps": 3,
+            "martingale_repeat_attempts": 5,  # Maximum valid
+            "selected_markets": ["R_100"]
+        }
+        
+        response = requests.post(
+            f"{API_URL}/bots/quickstart", 
+            json=valid_config
+        )
+        print(f"Valid repeat attempts - Status Code: {response.status_code}")
+        assert response.status_code == 200, "Valid repeat attempts rejected"
+        
+        # Test with invalid repeat attempts (above maximum)
+        invalid_config = {
+            "api_token": "test_token_123",
+            "stake_amount": 1.0,
+            "take_profit": 100.0,
+            "stop_loss": 50.0,
+            "martingale_multiplier": 2.0,
+            "max_martingale_steps": 3,
+            "martingale_repeat_attempts": 6,  # Above maximum
+            "selected_markets": ["R_100"]
+        }
+        
+        response = requests.post(
+            f"{API_URL}/bots/quickstart", 
+            json=invalid_config
+        )
+        print(f"Invalid repeat attempts - Status Code: {response.status_code}")
+        assert response.status_code in [400, 422], f"Expected 400 or 422 for invalid repeat attempts, got {response.status_code}"
+        
+        print("✅ Martingale Repeat Attempts Validation: PASSED - 1-5 range enforced")
+        return True
+    except Exception as e:
+        print(f"❌ Martingale Repeat Attempts Validation: FAILED - {str(e)}")
+        return False
+
 def run_all_tests():
     """Run all API tests and return results"""
     results = {}
@@ -551,6 +645,12 @@ def run_all_tests():
     
     # Test 8: Error Handling
     results["Error Handling"] = test_error_handling()
+    
+    # Test 9: Minimum Stake Validation
+    results["Minimum Stake Validation"] = test_minimum_stake_validation()
+    
+    # Test 10: Martingale Repeat Attempts Validation
+    results["Martingale Repeat Attempts"] = test_martingale_repeat_attempts_validation()
     
     # Print summary
     print("\n=== TEST SUMMARY ===")
