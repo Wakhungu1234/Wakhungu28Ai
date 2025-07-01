@@ -347,10 +347,19 @@ async def get_bot_trades(bot_id: str, limit: int = 100):
             {"bot_id": bot_id}
         ).sort("execution_time", -1).limit(limit).to_list(limit)
         
+        # Convert MongoDB ObjectId to string to make it JSON serializable
+        serialized_trades = []
+        if trades:
+            for trade in trades:
+                # Convert ObjectId to string if present
+                if '_id' in trade:
+                    trade['_id'] = str(trade['_id'])
+                serialized_trades.append(trade)
+        
         return {
             "bot_id": bot_id,
-            "trades": trades if trades else [],
-            "count": len(trades) if trades else 0
+            "trades": serialized_trades if serialized_trades else [],
+            "count": len(serialized_trades) if serialized_trades else 0
         }
         
     except HTTPException as he:
