@@ -247,6 +247,7 @@ async def create_quickstart_bot(config: BotConfigCreate):
                 "stop_loss": f"${config.stop_loss}",
                 "martingale_multiplier": f"{config.martingale_multiplier}x",
                 "max_martingale_steps": config.max_martingale_steps,
+                "martingale_repeat_attempts": config.martingale_repeat_attempts,
                 "selected_markets": config.selected_markets
             },
             "warning": "⚠️ ULTRA-AGGRESSIVE SETTINGS - Monitor closely!",
