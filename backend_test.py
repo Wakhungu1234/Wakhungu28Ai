@@ -43,11 +43,12 @@ TEST_BOT_CONFIG = {
 # Test data for bot creation with multiple markets
 TEST_MULTI_MARKET_BOT_CONFIG = {
     "api_token": "test_token_456",
-    "stake_amount": 15.0,
+    "stake_amount": 1.50,
     "take_profit": 500.0,
     "stop_loss": 200.0,
-    "martingale_multiplier": 2.0,
-    "max_martingale_steps": 3,
+    "martingale_multiplier": 2.5,
+    "max_martingale_steps": 4,
+    "martingale_repeat_attempts": 2,  # Testing martingale repeat attempts
     "selected_markets": ["R_100", "R_25", "R_50", "1HZ10V", "1HZ25V"]
 }
 
