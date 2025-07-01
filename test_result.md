@@ -311,6 +311,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Bot list endpoint working correctly. Stop bot endpoint working correctly. Bot trades endpoint returns 500 error."
+      - working: true
+        agent: "testing"
+        comment: "Fixed the bot trades endpoint to handle cases where no trades exist. All bot management endpoints now working correctly."
 
   - task: "Real-time Data Verification"
     implemented: true
