@@ -255,10 +255,14 @@ def test_multi_market_bot_creation():
             for market in TEST_MULTI_MARKET_BOT_CONFIG["selected_markets"]:
                 assert market in selected_markets, f"Market {market} not found in response"
             
+            # Verify martingale repeat attempts
+            assert config["martingale_repeat_attempts"] == 2, f"Expected martingale repeat attempts of 2, got {config.get('martingale_repeat_attempts')}"
+            
             # Store bot_id for later tests
             bot_id = data["bot_id"]
             
             print("✅ Multi-Market Bot Creation: PASSED - Successfully created bot with multiple markets")
+            print("✅ Martingale repeat attempts parameter working")
             return True, bot_id
         else:
             print(f"Response: {response.text}")
