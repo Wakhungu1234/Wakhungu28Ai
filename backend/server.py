@@ -452,13 +452,13 @@ async def get_trading_signals_for_bot(markets: List[str]) -> List[Dict]:
         return []
 
 async def execute_bot_trade(bot_id: str, signal: Dict):
-    """Execute a trade for a bot"""
+    """Execute a trade for a bot with enhanced martingale recovery"""
     try:
         bot_data = active_bots[bot_id]
         config = bot_data["config"]
         
-        # Calculate stake (for simulation, use fixed stake)
-        stake = config.stake_amount
+        # Calculate stake based on martingale recovery system
+        stake = calculate_enhanced_martingale_stake(bot_data)
         
         # Simulate trade outcome (in real implementation, use Deriv API)
         import random
@@ -471,18 +471,32 @@ async def execute_bot_trade(bot_id: str, signal: Dict):
             outcome = "WIN"
             bot_data["winning_trades"] += 1
             bot_data["current_streak"] += 1
+            
+            # Reset martingale on win
+            bot_data["martingale_step"] = 0
+            bot_data["martingale_repeat_count"] = 0
+            bot_data["recovery_mode"] = False
+            bot_data["accumulated_loss"] = 0.0
+            
         else:
             profit_loss = -stake
             outcome = "LOSS"
             bot_data["current_streak"] = 0
-        
+            
+            # Update accumulated loss for recovery tracking
+            bot_data["accumulated_loss"] += stake
+            bot_data["recovery_mode"] = True
+            
+            # Update martingale tracking
+            update_martingale_tracking(bot_data, config)
+
         # Update bot statistics
         bot_data["total_trades"] += 1
         bot_data["total_profit"] += profit_loss
         bot_data["current_balance"] += profit_loss
         bot_data["last_trade_time"] = datetime.utcnow()
         
-        # Record trade in database
+        # Record trade in database with martingale info
         trade_record = TradeRecord(
             bot_id=bot_id,
             symbol=signal["symbol"],
@@ -491,7 +505,9 @@ async def execute_bot_trade(bot_id: str, signal: Dict):
             stake=stake,
             confidence=signal["confidence"],
             outcome=outcome,
-            profit_loss=profit_loss
+            profit_loss=profit_loss,
+            martingale_step=bot_data["martingale_step"],
+            martingale_repeat=bot_data["martingale_repeat_count"]
         )
         
         await db.trade_records.insert_one(trade_record.dict())
@@ -499,13 +515,57 @@ async def execute_bot_trade(bot_id: str, signal: Dict):
         # Calculate win rate
         win_rate = (bot_data["winning_trades"] / bot_data["total_trades"]) * 100
         
+        # Enhanced logging with martingale info
+        martingale_info = ""
+        if bot_data["recovery_mode"]:
+            martingale_info = f" | M{bot_data['martingale_step']}.{bot_data['martingale_repeat_count']} | Recovery: ${bot_data['accumulated_loss']:.2f}"
+        
         logger.info(f"🚀 {config.name} | {signal['symbol']} {signal['action']} | "
-                   f"{outcome} ${profit_loss:.2f} | "
+                   f"{outcome} ${profit_loss:.2f}{martingale_info} | "
                    f"Win Rate: {win_rate:.1f}% | "
                    f"Balance: ${bot_data['current_balance']:.2f}")
         
     except Exception as e:
         logger.error(f"Error executing bot trade: {e}")
+
+def calculate_enhanced_martingale_stake(bot_data: Dict) -> float:
+    """Calculate stake amount using enhanced martingale recovery system"""
+    config = bot_data["config"]
+    base_stake = config.stake_amount
+    
+    if not bot_data["recovery_mode"] or bot_data["martingale_step"] == 0:
+        return base_stake
+    
+    # Calculate martingale stake: base_stake * (multiplier ^ step)
+    martingale_stake = base_stake * (config.martingale_multiplier ** bot_data["martingale_step"])
+    
+    return min(martingale_stake, base_stake * 50)  # Cap at 50x base stake for safety
+
+def update_martingale_tracking(bot_data: Dict, config):
+    """Update martingale step and repeat tracking after a loss"""
+    current_repeat = bot_data["martingale_repeat_count"]
+    max_repeats = config.martingale_repeat_attempts
+    current_step = bot_data["martingale_step"]
+    max_steps = config.max_martingale_steps
+    
+    # Check if we should repeat the current martingale level
+    if current_repeat < max_repeats - 1:
+        # Increment repeat count, stay at same martingale step
+        bot_data["martingale_repeat_count"] += 1
+        logger.info(f"🔄 Repeating martingale step {current_step}, attempt {current_repeat + 2}/{max_repeats}")
+    else:
+        # Move to next martingale step if available
+        if current_step < max_steps:
+            bot_data["martingale_step"] += 1
+            bot_data["martingale_repeat_count"] = 0
+            logger.info(f"📈 Advancing to martingale step {current_step + 1}")
+        else:
+            # Reset if we've exhausted all steps and repeats
+            bot_data["martingale_step"] = 0
+            bot_data["martingale_repeat_count"] = 0
+            bot_data["recovery_mode"] = False
+            bot_data["accumulated_loss"] = 0.0
+            logger.info("🔄 Martingale sequence exhausted, resetting to base stake")
 
 @api_router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
