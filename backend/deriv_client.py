@@ -91,6 +91,18 @@ class DerivWebSocketClient:
                     if 'error' in data:
                         logger.error(f"Authorization error: {data['error']}")
             
+            # Handle balance response
+            elif 'balance' in data:
+                balance_data = data['balance']
+                logger.info(f"💰 Account Balance: ${balance_data.get('balance', 0):.2f} {balance_data.get('currency', 'USD')}")
+            
+            # Handle buy response (real trade execution)
+            elif 'buy' in data:
+                buy_data = data['buy']
+                contract_id = buy_data.get('contract_id')
+                buy_price = buy_data.get('buy_price')
+                logger.info(f"✅ REAL TRADE EXECUTED: Contract ID {contract_id}, Price: ${buy_price}")
+            
             # Handle tick data
             elif 'tick' in data:
                 tick_data = data['tick']
