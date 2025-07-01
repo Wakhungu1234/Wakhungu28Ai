@@ -555,6 +555,24 @@ backend:
         agent: "testing"
         comment: "Verified that real trades use enhanced martingale recovery system. Martingale step and repeat tracking works with real trades. Recovery logic is preserved in real trading mode."
 
+  - task: "Bot Management Buttons"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Testing the Restart and Delete bot button functionality in the backend."
+      - working: false
+        agent: "testing"
+        comment: "Found an issue with the restart bot endpoint - it was missing the route decorator. The endpoint was returning a 404 error."
+      - working: true
+        agent: "testing"
+        comment: "Fixed the restart bot endpoint by adding the missing route decorator. All bot management buttons now work correctly: 1) Delete Bot Button: Successfully deletes the bot configuration from the database, removes all associated trade records, and removes the bot from active_bots runtime. 2) Restart Bot Button: Successfully restarts a stopped bot, resets bot statistics, creates new runtime data if needed, and starts the trading task. 3) Stop Bot Button: Successfully stops an active bot without deleting it and updates the database correctly. 4) End-to-End Button Flow: Successfully tested the complete bot lifecycle - create, stop, restart, delete."
+
 frontend:
   - task: "Main App Structure"
     implemented: true
