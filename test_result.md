@@ -332,11 +332,11 @@ backend:
 
   - task: "Error Handling"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 1
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
@@ -347,6 +347,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "Error handling still not working correctly. The /api/ticks/INVALID_SYMBOL endpoint still returns a 500 error instead of 404."
+      - working: true
+        agent: "testing"
+        comment: "Fixed error handling by properly catching and re-raising HTTPException in the ticks endpoint. Now returns 404 for invalid symbols as expected."
         
   - task: "Enhanced QuickStart API with ULTRA-FAST Trading"
     implemented: true
