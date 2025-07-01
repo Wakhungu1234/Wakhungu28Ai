@@ -6,6 +6,7 @@ import { Button } from "./components/ui/button";
 import { Badge } from "./components/ui/badge";
 import QuickStartForm from "./components/QuickStartForm";
 import BotDashboard from "./components/BotDashboard";
+import RealTimeAnalysis from "./components/RealTimeAnalysis";
 import { Toaster } from "./components/ui/toaster";
 import { 
   Bot, 
@@ -16,7 +17,8 @@ import {
   WifiOff,
   Rocket,
   Activity,
-  Settings
+  Settings,
+  Target
 } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -51,27 +53,38 @@ const Home = () => {
                 <Activity className="w-3 h-3 mr-1" />
                 AI Enhanced
               </Badge>
+              <Badge className="bg-red-100 text-red-800 border-red-300">
+                <Zap className="w-3 h-3 mr-1" />
+                ULTRA-FAST
+              </Badge>
             </div>
           </div>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-            Advanced AI Trading Bot for Deriv.com - Target: 88%+ Win Rate through Ultra-Aggressive Pattern Recognition
+            Advanced AI Trading Bot for Deriv.com - Target: 88%+ Win Rate through ULTRA-FAST Pattern Recognition
           </p>
           
           {/* Feature Highlights */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-5xl mx-auto mb-8">
             <div className="bg-white rounded-lg shadow p-4 border">
               <div className="flex items-center justify-center mb-2">
-                <Zap className="w-8 h-8 text-yellow-500" />
+                <Zap className="w-8 h-8 text-red-500" />
               </div>
-              <h3 className="font-semibold text-gray-800">Ultra-Aggressive</h3>
-              <p className="text-sm text-gray-600">3-second trading intervals</p>
+              <h3 className="font-semibold text-gray-800">ULTRA-FAST</h3>
+              <p className="text-sm text-gray-600">0.5-second trading</p>
             </div>
             <div className="bg-white rounded-lg shadow p-4 border">
               <div className="flex items-center justify-center mb-2">
                 <BarChart3 className="w-8 h-8 text-blue-500" />
               </div>
               <h3 className="font-semibold text-gray-800">AI Enhanced</h3>
-              <p className="text-sm text-gray-600">Advanced pattern recognition</p>
+              <p className="text-sm text-gray-600">Pattern recognition</p>
+            </div>
+            <div className="bg-white rounded-lg shadow p-4 border">
+              <div className="flex items-center justify-center mb-2">
+                <Target className="w-8 h-8 text-purple-500" />
+              </div>
+              <h3 className="font-semibold text-gray-800">Multi-Market</h3>
+              <p className="text-sm text-gray-600">10 volatility indices</p>
             </div>
             <div className="bg-white rounded-lg shadow p-4 border">
               <div className="flex items-center justify-center mb-2">
@@ -84,25 +97,25 @@ const Home = () => {
         </div>
 
         {/* Pro Bot Tabs */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-8">
           <div className="flex items-center space-x-3 mb-6">
             <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg">
               <Rocket className="w-6 h-6 text-white" />
             </div>
             <h2 className="text-3xl font-bold text-gray-800">⚡ Pro Bot</h2>
             <Badge className="bg-purple-100 text-purple-800 border-purple-300">
-              Professional Trading Interface
+              ULTRA-FAST Trading Interface
             </Badge>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8">
+            <TabsList className="grid w-full grid-cols-3 mb-8">
               <TabsTrigger 
                 value="quickstart" 
                 className="flex items-center space-x-2 text-lg py-3"
               >
                 <Zap className="w-5 h-5" />
-                <span>🚀 QUICK START - Trade NOW!</span>
+                <span>🚀 QUICK START</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="dashboard" 
@@ -110,6 +123,13 @@ const Home = () => {
               >
                 <Settings className="w-5 h-5" />
                 <span>🤖 Bot Management</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="analysis" 
+                className="flex items-center space-x-2 text-lg py-3"
+              >
+                <BarChart3 className="w-5 h-5" />
+                <span>📊 Live Analysis</span>
               </TabsTrigger>
             </TabsList>
 
@@ -120,6 +140,10 @@ const Home = () => {
             <TabsContent value="dashboard" className="space-y-6">
               <BotDashboard />
             </TabsContent>
+
+            <TabsContent value="analysis" className="space-y-6">
+              <RealTimeAnalysis />
+            </TabsContent>
           </Tabs>
         </div>
 
@@ -128,7 +152,7 @@ const Home = () => {
           <div className="inline-flex items-center space-x-2 px-4 py-2 bg-white rounded-full shadow-md border">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
             <span className="text-sm text-gray-600">
-              Connected to Deriv.com WebSocket API - Real-time data streaming
+              Connected to Deriv.com WebSocket API - Real-time ULTRA-FAST data streaming
             </span>
           </div>
         </div>
@@ -141,10 +165,10 @@ const Home = () => {
                 ⚠️
               </div>
               <div>
-                <h4 className="font-semibold text-amber-800">Trading Risk Warning</h4>
+                <h4 className="font-semibold text-amber-800">ULTRA-FAST Trading Risk Warning</h4>
                 <p className="text-sm text-amber-700 mt-1">
-                  Trading derivatives carries significant risk. Only trade with money you can afford to lose. 
-                  Past performance does not guarantee future results. Monitor your bots closely.
+                  ULTRA-FAST 0.5-second trading carries significant risk. Only trade with money you can afford to lose. 
+                  Monitor your bots closely due to the extremely high trading frequency.
                 </p>
               </div>
             </div>
