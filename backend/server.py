@@ -196,7 +196,7 @@ async def create_quickstart_bot(config: BotConfigCreate):
             martingale_multiplier=config.martingale_multiplier,
             max_martingale_steps=config.max_martingale_steps,
             selected_markets=config.selected_markets,
-            trade_interval=3,  # Ultra-aggressive 3-second interval
+            trade_interval=0.5,  # ULTRA-FAST 0.5-second interval
             is_active=True
         )
         
