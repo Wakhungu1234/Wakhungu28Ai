@@ -13,7 +13,9 @@ import {
   Target,
   Zap,
   Clock,
-  BarChart3
+  BarChart3,
+  RefreshCw,
+  AlertTriangle
 } from 'lucide-react';
 import { toast } from './ui/toaster';
 
@@ -22,10 +24,11 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const BotDashboard = () => {
   const [bots, setBots] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState({});
 
   useEffect(() => {
     fetchBots();
-    const interval = setInterval(fetchBots, 5000); // Refresh every 5 seconds
+    const interval = setInterval(fetchBots, 3000); // Refresh every 3 seconds for faster updates
     return () => clearInterval(interval);
   }, []);
 
@@ -42,19 +45,69 @@ const BotDashboard = () => {
   };
 
   const stopBot = async (botId) => {
+    setActionLoading(prev => ({ ...prev, [botId]: 'stopping' }));
     try {
       const response = await fetch(`${BACKEND_URL}/api/bots/${botId}`, {
         method: 'DELETE'
       });
 
       if (response.ok) {
-        toast.success('Bot stopped successfully');
+        toast.success('🛑 Bot stopped successfully');
         fetchBots();
       } else {
-        toast.error('Failed to stop bot');
+        const error = await response.json();
+        toast.error('Failed to stop bot', {
+          description: error.detail || 'Unknown error occurred'
+        });
+      }
+    } catch (error) {
+      toast.error('Connection error', {
+        description: 'Failed to connect to server'
+      });
+    } finally {
+      setActionLoading(prev => ({ ...prev, [botId]: null }));
+    }
+  };
+
+  const restartBot = async (botId) => {
+    setActionLoading(prev => ({ ...prev, [botId]: 'restarting' }));
+    try {
+      // For now, we'll show a coming soon message
+      // In a real implementation, you'd have a restart endpoint
+      toast.info('🔄 Restart feature coming soon!', {
+        description: 'For now, create a new bot with the same settings'
+      });
+    } catch (error) {
+      toast.error('Connection error');
+    } finally {
+      setActionLoading(prev => ({ ...prev, [botId]: null }));
+    }
+  };
+
+  const deleteBot = async (botId) => {
+    if (!window.confirm('Are you sure you want to permanently delete this bot?')) {
+      return;
+    }
+
+    setActionLoading(prev => ({ ...prev, [botId]: 'deleting' }));
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/bots/${botId}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        toast.success('🗑️ Bot deleted successfully');
+        setBots(prev => prev.filter(bot => bot.id !== botId));
+      } else {
+        const error = await response.json();
+        toast.error('Failed to delete bot', {
+          description: error.detail || 'Unknown error occurred'
+        });
       }
     } catch (error) {
       toast.error('Connection error');
+    } finally {
+      setActionLoading(prev => ({ ...prev, [botId]: null }));
     }
   };
 
@@ -78,6 +131,18 @@ const BotDashboard = () => {
     }
   };
 
+  const getTradingSpeed = (status) => {
+    if (status === 'ACTIVE') {
+      return (
+        <div className="flex items-center space-x-1 text-xs text-green-600">
+          <Zap className="w-3 h-3" />
+          <span>ULTRA-FAST (0.5s)</span>
+        </div>
+      );
+    }
+    return null;
+  };
+
   if (loading) {
     return (
       <div className="text-center py-12">
@@ -92,7 +157,7 @@ const BotDashboard = () => {
       {/* Header */}
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-gray-800 mb-2">🤖 Bot Management Dashboard</h2>
-        <p className="text-gray-600">Monitor and manage your trading bots</p>
+        <p className="text-gray-600">Monitor and manage your ULTRA-FAST trading bots</p>
       </div>
 
       {/* Stats Overview */}
@@ -152,7 +217,7 @@ const BotDashboard = () => {
         <div className="text-center py-16 bg-white rounded-xl shadow-lg border border-gray-200">
           <Bot className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-gray-600 mb-2">No Trading Bots</h3>
-          <p className="text-gray-500 mb-6">Create your first ultra-aggressive trading bot using Quick Start</p>
+          <p className="text-gray-500 mb-6">Create your first ULTRA-FAST trading bot using Quick Start</p>
           <div className="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg">
             <Zap className="w-4 h-4 mr-2" />
             Use the "🚀 QUICK START - Trade NOW!" tab to get started
@@ -170,10 +235,21 @@ const BotDashboard = () => {
                   </div>
                   <div>
                     <h3 className="font-bold text-lg text-gray-800">{bot.name}</h3>
-                    <p className="text-sm text-gray-500">ID: {bot.id.slice(0, 8)}...</p>
+                    <div className="flex items-center space-x-2">
+                      <p className="text-sm text-gray-500">ID: {bot.id.slice(0, 8)}...</p>
+                      {getTradingSpeed(bot.status)}
+                    </div>
                   </div>
                 </div>
-                {getStatusBadge(bot.status)}
+                <div className="text-right">
+                  {getStatusBadge(bot.status)}
+                  {bot.status === 'ACTIVE' && (
+                    <div className="flex items-center space-x-1 text-xs text-red-600 mt-1">
+                      <AlertTriangle className="w-3 h-3" />
+                      <span>ULTRA-FAST MODE</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Performance Metrics */}
@@ -239,28 +315,54 @@ const BotDashboard = () => {
                     variant="destructive"
                     size="sm"
                     className="flex-1"
+                    disabled={actionLoading[bot.id] === 'stopping'}
                   >
-                    <Square className="w-4 h-4 mr-2" />
-                    Stop Bot
+                    {actionLoading[bot.id] === 'stopping' ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="animate-spin rounded-full h-3 w-3 border-b border-white"></div>
+                        <span>Stopping...</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-1">
+                        <Square className="w-4 h-4" />
+                        <span>Stop Bot</span>
+                      </div>
+                    )}
                   </Button>
                 ) : (
                   <Button
+                    onClick={() => restartBot(bot.id)}
                     variant="outline"
                     size="sm"
                     className="flex-1"
-                    disabled
+                    disabled={actionLoading[bot.id] === 'restarting'}
                   >
-                    <Play className="w-4 h-4 mr-2" />
-                    Restart
+                    {actionLoading[bot.id] === 'restarting' ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="animate-spin rounded-full h-3 w-3 border-b border-gray-600"></div>
+                        <span>Restarting...</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-1">
+                        <RefreshCw className="w-4 h-4" />
+                        <span>Restart</span>
+                      </div>
+                    )}
                   </Button>
                 )}
                 
                 <Button
-                  onClick={() => stopBot(bot.id)}
+                  onClick={() => deleteBot(bot.id)}
                   variant="outline"
                   size="sm"
+                  disabled={actionLoading[bot.id] === 'deleting'}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  {actionLoading[bot.id] === 'deleting' ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b border-red-600"></div>
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
                 </Button>
               </div>
             </div>
