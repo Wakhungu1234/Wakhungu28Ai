@@ -257,13 +257,13 @@ const QuickStartForm = ({ onBotCreated }) => {
           </div>
         </div>
 
-        {/* Recovery Settings */}
+        {/* Enhanced Recovery Settings */}
         <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
           <h3 className="text-xl font-semibold mb-4 flex items-center text-gray-800">
             <RotateCcw className="w-5 h-5 mr-2 text-purple-600" />
-            🔄 Recovery Settings
+            🔄 Enhanced Recovery Settings
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <Label htmlFor="martingale_multiplier" className="text-sm font-medium text-gray-700">
                 Martingale Multiplier
@@ -294,6 +294,32 @@ const QuickStartForm = ({ onBotCreated }) => {
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
               />
               <p className="text-xs text-gray-500 mt-1">2-4 steps for ULTRA-FAST safety</p>
+            </div>
+            <div>
+              <Label htmlFor="martingale_repeat_attempts" className="text-sm font-medium text-gray-700">
+                Repeat Attempts per Step
+              </Label>
+              <input
+                id="martingale_repeat_attempts"
+                type="number"
+                min="1"
+                max="5"
+                value={formData.martingale_repeat_attempts}
+                onChange={(e) => handleInputChange('martingale_repeat_attempts', parseInt(e.target.value))}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Repeat same stake for 100% recovery</p>
+            </div>
+          </div>
+          
+          {/* Recovery Example */}
+          <div className="mt-4 p-4 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg border border-orange-200">
+            <h4 className="font-semibold text-orange-800 mb-2">💡 Enhanced Recovery Example:</h4>
+            <div className="text-sm text-orange-700 space-y-1">
+              <p>• First trade: ${formData.stake_amount} (Loss)</p>
+              <p>• Martingale step 1: ${(formData.stake_amount * formData.martingale_multiplier).toFixed(2)} × {formData.martingale_repeat_attempts} attempts</p>
+              <p>• If still losing, step 2: ${(formData.stake_amount * Math.pow(formData.martingale_multiplier, 2)).toFixed(2)} × {formData.martingale_repeat_attempts} attempts</p>
+              <p className="font-semibold">🎯 Goal: 100% recovery of all losses with repeated stakes!</p>
             </div>
           </div>
         </div>
