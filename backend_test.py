@@ -368,7 +368,7 @@ def test_stop_bot(bot_id):
     
     print(f"\n=== Testing Stop Bot Endpoint for Bot ID: {bot_id} ===")
     try:
-        response = requests.delete(f"{API_URL}/bots/{bot_id}")
+        response = requests.put(f"{API_URL}/bots/{bot_id}/stop")
         print(f"Status Code: {response.status_code}")
         
         if response.status_code == 200:
@@ -377,6 +377,7 @@ def test_stop_bot(bot_id):
             
             assert data["status"] == "success", "Bot stopping failed"
             assert "message" in data, "Response message missing"
+            assert data["bot_id"] == bot_id, f"Expected bot ID {bot_id}, got {data.get('bot_id')}"
             
             # Verify bot status is updated
             time.sleep(1)  # Wait for status to update
