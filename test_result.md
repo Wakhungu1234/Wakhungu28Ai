@@ -332,6 +332,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "Error handling for invalid symbols needs improvement. When requesting ticks for an invalid symbol (/api/ticks/INVALID_SYMBOL), the API returns a 500 error instead of the expected 404. This indicates an unhandled exception in the error handling logic."
+      - working: false
+        agent: "testing"
+        comment: "Error handling still not working correctly. The /api/ticks/INVALID_SYMBOL endpoint still returns a 500 error instead of 404."
 
 frontend:
   - task: "Frontend Implementation"
