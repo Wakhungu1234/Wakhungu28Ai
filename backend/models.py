@@ -36,11 +36,12 @@ class BotConfig(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
     api_token: str
-    stake_amount: float = Field(ge=1, le=1000)
+    stake_amount: float = Field(ge=0.35, le=1000)  # Reduced minimum stake to $0.35
     take_profit: float = Field(ge=10, le=10000)
     stop_loss: float = Field(ge=10, le=5000)
     martingale_multiplier: float = Field(ge=1.1, le=5.0)
     max_martingale_steps: int = Field(ge=1, le=10)
+    martingale_repeat_attempts: int = Field(default=1, ge=1, le=5)  # New: repeat same stake for recovery
     selected_markets: List[str] = ["R_100"]
     trade_interval: float = Field(default=0.5, ge=0.1, le=60)  # seconds, now accepts float values
     is_active: bool = False
@@ -50,11 +51,12 @@ class BotConfig(BaseModel):
 class BotConfigCreate(BaseModel):
     name: str = "QuickStart-Ultra"
     api_token: str
-    stake_amount: float = Field(default=10.0, ge=1, le=1000)
+    stake_amount: float = Field(default=10.0, ge=0.35, le=1000)  # Reduced minimum stake to $0.35
     take_profit: float = Field(default=500.0, ge=10, le=10000)
     stop_loss: float = Field(default=200.0, ge=10, le=5000)
     martingale_multiplier: float = Field(default=2.0, ge=1.1, le=5.0)
     max_martingale_steps: int = Field(default=5, ge=1, le=10)
+    martingale_repeat_attempts: int = Field(default=2, ge=1, le=5)  # New: repeat same stake for recovery
     selected_markets: List[str] = ["R_100"]
 
 class BotStatus(BaseModel):
