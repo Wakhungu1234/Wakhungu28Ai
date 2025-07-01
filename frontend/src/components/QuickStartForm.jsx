@@ -213,14 +213,14 @@ const QuickStartForm = ({ onBotCreated }) => {
               <input
                 id="stake_amount"
                 type="number"
-                min="1"
+                min="0.35"
                 max="1000"
                 step="0.01"
                 value={formData.stake_amount}
                 onChange={(e) => handleInputChange('stake_amount', parseFloat(e.target.value))}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
               />
-              <p className="text-xs text-gray-500 mt-1">$5-$25 recommended for ULTRA-FAST trading</p>
+              <p className="text-xs text-gray-500 mt-1">$0.35-$25 recommended for ULTRA-FAST trading</p>
             </div>
             <div>
               <Label htmlFor="take_profit" className="text-sm font-medium text-gray-700">
