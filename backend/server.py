@@ -157,6 +157,9 @@ async def get_analysis(request: PredictionRequest):
     """Get analysis and predictions for a symbol"""
     try:
         # Get tick data
+        if request.symbol not in tick_storage:
+            raise HTTPException(status_code=404, detail=f"Symbol '{request.symbol}' not found")
+            
         ticks = tick_storage.get(request.symbol, [])
         
         # Use only the requested number of ticks
@@ -174,6 +177,9 @@ async def get_analysis(request: PredictionRequest):
             "analysis": analysis_result
         }
         
+    except HTTPException as he:
+        # Re-raise HTTP exceptions
+        raise he
     except Exception as e:
         logger.error(f"Error performing analysis: {e}")
         raise HTTPException(status_code=500, detail=str(e))
