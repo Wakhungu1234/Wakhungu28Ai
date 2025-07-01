@@ -7,6 +7,7 @@ import { Badge } from "./components/ui/badge";
 import QuickStartForm from "./components/QuickStartForm";
 import BotDashboard from "./components/BotDashboard";
 import RealTimeAnalysis from "./components/RealTimeAnalysis";
+import PasswordProtection from "./components/PasswordProtection";
 import { Toaster } from "./components/ui/toaster";
 import { 
   Bot, 
@@ -18,18 +19,31 @@ import {
   Rocket,
   Activity,
   Settings,
-  Target
+  Target,
+  Shield,
+  LogOut
 } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState("quickstart");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const handleBotCreated = (botData) => {
     // Switch to bot dashboard after creating a bot
     setActiveTab("dashboard");
   };
+
+  const handleLogout = () => {
+    localStorage.removeItem('wakhungu28ai_authenticated');
+    setIsAuthenticated(false);
+  };
+
+  // Show password protection if not authenticated
+  if (!isAuthenticated) {
+    return <PasswordProtection onAuthSuccess={() => setIsAuthenticated(true)} />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -57,8 +71,26 @@ const Home = () => {
                 <Zap className="w-3 h-3 mr-1" />
                 ULTRA-FAST
               </Badge>
+              <Badge className="bg-purple-100 text-purple-800 border-purple-300">
+                <Shield className="w-3 h-3 mr-1" />
+                Secured
+              </Badge>
             </div>
           </div>
+          
+          {/* Logout Button */}
+          <div className="absolute top-4 right-4">
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              size="sm"
+              className="flex items-center space-x-2"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Logout</span>
+            </Button>
+          </div>
+          
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
             Advanced AI Trading Bot for Deriv.com - Target: 88%+ Win Rate through ULTRA-FAST Pattern Recognition
           </p>
@@ -159,16 +191,16 @@ const Home = () => {
 
         {/* Warning Disclaimer */}
         <div className="mt-6 max-w-2xl mx-auto">
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex items-start space-x-3">
-              <div className="text-amber-600">
+              <div className="text-red-600">
                 ⚠️
               </div>
               <div>
-                <h4 className="font-semibold text-amber-800">ULTRA-FAST Trading Risk Warning</h4>
-                <p className="text-sm text-amber-700 mt-1">
-                  ULTRA-FAST 0.5-second trading carries significant risk. Only trade with money you can afford to lose. 
-                  Monitor your bots closely due to the extremely high trading frequency.
+                <h4 className="font-semibold text-red-800">REAL MONEY TRADING WARNING</h4>
+                <p className="text-sm text-red-700 mt-1">
+                  This platform executes REAL TRADES with REAL MONEY on Deriv.com using ULTRA-FAST 0.5-second intervals. 
+                  Only trade with money you can afford to lose. Monitor your bots closely due to the extremely high trading frequency.
                 </p>
               </div>
             </div>
