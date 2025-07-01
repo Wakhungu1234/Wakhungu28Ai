@@ -227,8 +227,8 @@ async def create_quickstart_bot(config: BotConfigCreate):
             "bot_id": bot_config.id,
             "bot_name": bot_name,
             "configuration": {
-                "trade_interval": "3 seconds",
-                "expected_trades_per_hour": 1200,
+                "trade_interval": "0.5 seconds",
+                "expected_trades_per_hour": 7200,
                 "stake_amount": f"${config.stake_amount}",
                 "take_profit": f"${config.take_profit}",
                 "stop_loss": f"${config.stop_loss}",
