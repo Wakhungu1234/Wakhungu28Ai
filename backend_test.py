@@ -435,6 +435,206 @@ def test_bot_trades(bot_id):
         print(f"❌ Bot Trades Endpoint: FAILED - {str(e)}")
         return False
 
+def test_restart_bot(bot_id):
+    """Test restarting a stopped bot"""
+    if not bot_id:
+        print("❌ Restart Bot Test: SKIPPED - No bot ID available")
+        return False
+    
+    print(f"\n=== Testing Restart Bot Endpoint for Bot ID: {bot_id} ===")
+    try:
+        # First make sure the bot is stopped
+        stop_response = requests.put(f"{API_URL}/bots/{bot_id}/stop")
+        if stop_response.status_code != 200:
+            print(f"Failed to stop bot before restart test: {stop_response.text}")
+            return False
+            
+        # Wait for bot to stop
+        time.sleep(1)
+        
+        # Now restart the bot
+        response = requests.put(f"{API_URL}/bots/{bot_id}/restart")
+        print(f"Status Code: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"Response: {json.dumps(data, indent=2)}")
+            
+            assert data["status"] == "success", "Bot restart failed"
+            assert "message" in data, "Response message missing"
+            assert data["bot_id"] == bot_id, f"Expected bot ID {bot_id}, got {data.get('bot_id')}"
+            
+            # Verify bot status is updated
+            time.sleep(1)  # Wait for status to update
+            bot_response = requests.get(f"{API_URL}/bots")
+            if bot_response.status_code == 200:
+                bots = bot_response.json()
+                bot_found = False
+                for bot in bots:
+                    if bot["id"] == bot_id:
+                        bot_found = True
+                        assert bot["status"] in ["ACTIVE", "STARTING"], f"Expected bot status ACTIVE or STARTING, got {bot['status']}"
+                        print(f"✅ Bot status correctly updated to {bot['status']}")
+                
+                if not bot_found:
+                    print("❌ Bot not found after restart")
+                    return False
+            
+            print("✅ Restart Bot Endpoint: PASSED")
+            return True
+        else:
+            print(f"Response: {response.text}")
+            print("❌ Restart Bot Endpoint: FAILED - Non-200 status code")
+            return False
+    except Exception as e:
+        print(f"❌ Restart Bot Endpoint: FAILED - {str(e)}")
+        return False
+
+def test_delete_bot(bot_id):
+    """Test permanently deleting a bot"""
+    if not bot_id:
+        print("❌ Delete Bot Test: SKIPPED - No bot ID available")
+        return False
+    
+    print(f"\n=== Testing Delete Bot Endpoint for Bot ID: {bot_id} ===")
+    try:
+        # First get the bot trades to verify they're deleted later
+        trades_response = requests.get(f"{API_URL}/bots/{bot_id}/trades")
+        initial_trade_count = 0
+        if trades_response.status_code == 200:
+            initial_trade_count = trades_response.json().get("count", 0)
+            print(f"Bot has {initial_trade_count} trades before deletion")
+        
+        # Now delete the bot
+        response = requests.delete(f"{API_URL}/bots/{bot_id}")
+        print(f"Status Code: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"Response: {json.dumps(data, indent=2)}")
+            
+            assert data["status"] == "success", "Bot deletion failed"
+            assert "message" in data, "Response message missing"
+            assert data["bot_id"] == bot_id, f"Expected bot ID {bot_id}, got {data.get('bot_id')}"
+            
+            # Verify trades_deleted count if there were initial trades
+            if initial_trade_count > 0:
+                assert "trades_deleted" in data, "Trades deleted count missing"
+                print(f"✅ {data.get('trades_deleted', 0)} trade records deleted")
+            
+            # Verify bot is removed from database
+            time.sleep(1)  # Wait for deletion to complete
+            bot_response = requests.get(f"{API_URL}/bots")
+            if bot_response.status_code == 200:
+                bots = bot_response.json()
+                for bot in bots:
+                    if bot["id"] == bot_id:
+                        print("❌ Bot still exists in database after deletion")
+                        return False
+                
+                print("✅ Bot successfully removed from database")
+            
+            # Verify trades are deleted
+            trades_response = requests.get(f"{API_URL}/bots/{bot_id}/trades")
+            if trades_response.status_code == 404:
+                print("✅ Bot trades endpoint returns 404 after deletion")
+            else:
+                print(f"❌ Expected 404 for deleted bot trades, got {trades_response.status_code}")
+            
+            print("✅ Delete Bot Endpoint: PASSED")
+            return True
+        else:
+            print(f"Response: {response.text}")
+            print("❌ Delete Bot Endpoint: FAILED - Non-200 status code")
+            return False
+    except Exception as e:
+        print(f"❌ Delete Bot Endpoint: FAILED - {str(e)}")
+        return False
+
+def test_error_handling_for_bot_operations():
+    """Test error handling for bot operations with non-existent bot IDs"""
+    print("\n=== Testing Error Handling for Bot Operations ===")
+    
+    # Generate a random non-existent bot ID
+    import uuid
+    non_existent_bot_id = str(uuid.uuid4())
+    
+    # Test 1: Stop non-existent bot
+    try:
+        response = requests.put(f"{API_URL}/bots/{non_existent_bot_id}/stop")
+        print(f"Stop non-existent bot - Status Code: {response.status_code}")
+        assert response.status_code == 404, f"Expected 404 for non-existent bot stop, got {response.status_code}"
+        print("✅ Stop non-existent bot test: PASSED")
+    except Exception as e:
+        print(f"❌ Stop non-existent bot test: FAILED - {str(e)}")
+        return False
+    
+    # Test 2: Restart non-existent bot
+    try:
+        response = requests.put(f"{API_URL}/bots/{non_existent_bot_id}/restart")
+        print(f"Restart non-existent bot - Status Code: {response.status_code}")
+        assert response.status_code == 404, f"Expected 404 for non-existent bot restart, got {response.status_code}"
+        print("✅ Restart non-existent bot test: PASSED")
+    except Exception as e:
+        print(f"❌ Restart non-existent bot test: FAILED - {str(e)}")
+        return False
+    
+    # Test 3: Delete non-existent bot
+    try:
+        response = requests.delete(f"{API_URL}/bots/{non_existent_bot_id}")
+        print(f"Delete non-existent bot - Status Code: {response.status_code}")
+        assert response.status_code == 404, f"Expected 404 for non-existent bot delete, got {response.status_code}"
+        print("✅ Delete non-existent bot test: PASSED")
+    except Exception as e:
+        print(f"❌ Delete non-existent bot test: FAILED - {str(e)}")
+        return False
+    
+    print("✅ Error Handling for Bot Operations: PASSED")
+    return True
+
+def test_end_to_end_bot_flow():
+    """Test the complete bot lifecycle: create, stop, restart, delete"""
+    print("\n=== Testing End-to-End Bot Flow ===")
+    
+    # Step 1: Create a new bot
+    print("Step 1: Creating a new bot...")
+    quickstart_result, bot_id = test_enhanced_quickstart_bot_creation()
+    if not quickstart_result or not bot_id:
+        print("❌ End-to-End Flow: FAILED - Could not create bot")
+        return False
+    
+    print(f"✅ Step 1 Complete: Bot created with ID {bot_id}")
+    
+    # Step 2: Stop the bot
+    print("Step 2: Stopping the bot...")
+    stop_result = test_stop_bot(bot_id)
+    if not stop_result:
+        print("❌ End-to-End Flow: FAILED - Could not stop bot")
+        return False
+    
+    print("✅ Step 2 Complete: Bot stopped successfully")
+    
+    # Step 3: Restart the bot
+    print("Step 3: Restarting the bot...")
+    restart_result = test_restart_bot(bot_id)
+    if not restart_result:
+        print("❌ End-to-End Flow: FAILED - Could not restart bot")
+        return False
+    
+    print("✅ Step 3 Complete: Bot restarted successfully")
+    
+    # Step 4: Delete the bot
+    print("Step 4: Deleting the bot...")
+    delete_result = test_delete_bot(bot_id)
+    if not delete_result:
+        print("❌ End-to-End Flow: FAILED - Could not delete bot")
+        return False
+    
+    print("✅ Step 4 Complete: Bot deleted successfully")
+    
+    print("✅ End-to-End Bot Flow: PASSED - Complete lifecycle tested successfully")
+    return True
+
 def test_websocket_connection():
     """Test WebSocket connection for real-time data"""
     print("\n=== Testing WebSocket Connection ===")
