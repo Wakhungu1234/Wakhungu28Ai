@@ -707,7 +707,62 @@ def update_martingale_tracking(bot_data: Dict, config):
             bot_data["accumulated_loss"] = 0.0
             logger.info("🔄 Martingale sequence exhausted, resetting to base stake")
 
-@api_router.websocket("/ws")
+@api_router.post("/verify-deriv-token")
+async def verify_deriv_token(request: dict):
+    """Verify a Deriv API token and get account information"""
+    try:
+        api_token = request.get("api_token")
+        if not api_token:
+            raise HTTPException(status_code=400, detail="API token is required")
+        
+        # Create a temporary Deriv client to verify the token
+        from deriv_client import DerivWebSocketClient
+        temp_client = DerivWebSocketClient(api_token)
+        
+        try:
+            # Connect and get account info
+            await temp_client.connect()
+            
+            # Wait a moment for authorization
+            await asyncio.sleep(2)
+            
+            if not temp_client.is_authorized:
+                raise HTTPException(status_code=401, detail="Invalid API token or authorization failed")
+            
+            # Request account information
+            await temp_client.get_account_balance()
+            
+            # For now, return a success response with basic info
+            # In a real implementation, you'd parse the actual account response
+            account_info = {
+                "loginid": "Connected",
+                "currency": "USD",
+                "balance": "Available",
+                "status": "authorized"
+            }
+            
+            await temp_client.disconnect()
+            
+            return {
+                "status": "success",
+                "message": "API token verified successfully",
+                "account_info": account_info,
+                "api_token_valid": True
+            }
+            
+        except Exception as e:
+            if temp_client:
+                try:
+                    await temp_client.disconnect()
+                except:
+                    pass
+            raise HTTPException(status_code=401, detail=f"Token verification failed: {str(e)}")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error verifying Deriv token: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error during token verification")
 async def websocket_endpoint(websocket: WebSocket):
     """WebSocket endpoint for real-time updates"""
     await websocket.accept()
