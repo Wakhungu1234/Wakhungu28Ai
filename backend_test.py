@@ -835,11 +835,8 @@ def run_all_tests():
     
     # Test bot management functions if we have a bot ID
     if bot_id:
-        stop_bot_result = test_stop_bot(bot_id)
         bot_trades_result = test_bot_trades(bot_id)
-        results["Bot Management"] = bots_list_result and stop_bot_result and bot_trades_result
-    else:
-        results["Bot Management"] = bots_list_result
+        results["Bot Trades Endpoint"] = bot_trades_result
     
     # Test 7: Real-time WebSocket Connection
     results["Real-time WebSocket Connection"] = test_websocket_connection()
@@ -852,6 +849,12 @@ def run_all_tests():
     
     # Test 10: Martingale Repeat Attempts Validation
     results["Martingale Repeat Attempts"] = test_martingale_repeat_attempts_validation()
+    
+    # Test 11: Error Handling for Bot Operations
+    results["Error Handling for Bot Operations"] = test_error_handling_for_bot_operations()
+    
+    # Test 12: End-to-End Bot Flow (Create, Stop, Restart, Delete)
+    results["End-to-End Bot Flow"] = test_end_to_end_bot_flow()
     
     # Print summary
     print("\n=== TEST SUMMARY ===")
