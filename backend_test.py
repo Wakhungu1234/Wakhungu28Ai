@@ -209,10 +209,18 @@ def test_enhanced_quickstart_bot_creation():
             assert config["trade_interval"] == "0.5 seconds", f"Expected trade interval of 0.5 seconds, got {config.get('trade_interval')}"
             assert config["expected_trades_per_hour"] == 7200, f"Expected 7200 trades per hour, got {config.get('expected_trades_per_hour')}"
             
+            # Verify minimum stake amount of $0.35
+            assert config["stake_amount"] == "$0.35", f"Expected stake amount of $0.35, got {config.get('stake_amount')}"
+            
+            # Verify martingale repeat attempts
+            assert config["martingale_repeat_attempts"] == 3, f"Expected martingale repeat attempts of 3, got {config.get('martingale_repeat_attempts')}"
+            
             # Store bot_id for later tests
             bot_id = data["bot_id"]
             
             print("✅ Enhanced QuickStart API: PASSED - ULTRA-FAST 0.5-second trading confirmed")
+            print("✅ Minimum stake amount of $0.35 accepted")
+            print("✅ Martingale repeat attempts parameter working")
             return True, bot_id
         else:
             print(f"Response: {response.text}")
