@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
-import { Zap, Settings, DollarSign, Target, Shield, RotateCcw, AlertTriangle, TrendingUp } from 'lucide-react';
+import { Zap, Settings, DollarSign, Target, Shield, RotateCcw, AlertTriangle, TrendingUp, ExternalLink } from 'lucide-react';
 import { toast } from './ui/toaster';
+import DerivAccountLinker from './DerivAccountLinker';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const QuickStartForm = ({ onBotCreated }) => {
+  const [showAccountLinker, setShowAccountLinker] = useState(false);
+  const [linkedAccount, setLinkedAccount] = useState(null);
   const [formData, setFormData] = useState({
     api_token: '',
     stake_amount: 2.0,  // Reduced default to $2 to showcase lower minimum
@@ -34,6 +37,22 @@ const QuickStartForm = ({ onBotCreated }) => {
     } catch (error) {
       console.error('Error fetching markets:', error);
     }
+  };
+
+  const handleAccountLinked = (accountData) => {
+    setLinkedAccount(accountData);
+    setFormData(prev => ({
+      ...prev,
+      api_token: accountData.api_token
+    }));
+    setShowAccountLinker(false);
+    toast.success('🔗 Deriv account linked successfully!', {
+      description: 'You can now create bots with ULTRA-FAST trading',
+    });
+  };
+
+  const handleSkipLinking = () => {
+    setShowAccountLinker(false);
   };
 
   const handleSubmit = async (e) => {
@@ -87,6 +106,16 @@ const QuickStartForm = ({ onBotCreated }) => {
     }));
   };
 
+  // Show account linker if not linked and no API token
+  if (showAccountLinker) {
+    return (
+      <DerivAccountLinker
+        onAccountLinked={handleAccountLinked}
+        onSkip={handleSkipLinking}
+      />
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header */}
@@ -103,6 +132,52 @@ const QuickStartForm = ({ onBotCreated }) => {
           Enhanced Quick Start with ULTRA-FAST trading and comprehensive parameter control
         </p>
       </div>
+
+      {/* Account Status */}
+      {linkedAccount ? (
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-green-600 rounded-full">
+                <Shield className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-green-800">✅ Deriv Account Linked</h3>
+                <p className="text-sm text-green-600">Ready for real money ULTRA-FAST trading</p>
+              </div>
+            </div>
+            <Button
+              onClick={() => setShowAccountLinker(true)}
+              variant="outline"
+              size="sm"
+              className="text-green-700 border-green-300 hover:bg-green-100"
+            >
+              Change Account
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-xl p-6 mb-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-blue-600 rounded-full">
+                <ExternalLink className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-blue-800">🔗 Link Your Deriv Account</h3>
+                <p className="text-sm text-blue-600">Get guided setup for secure account authorization</p>
+              </div>
+            </div>
+            <Button
+              onClick={() => setShowAccountLinker(true)}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Link Account
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Ultra-Aggressive Settings Summary */}
       <div className="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-xl p-6 mb-8">
@@ -143,19 +218,36 @@ const QuickStartForm = ({ onBotCreated }) => {
             <Label htmlFor="api_token" className="text-sm font-medium text-gray-700">
               Deriv API Token *
             </Label>
-            <input
-              id="api_token"
-              type="password"
-              value={formData.api_token}
-              onChange={(e) => handleInputChange('api_token', e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter your Deriv API token"
-              required
-            />
-            <p className="text-xs text-gray-500 mt-1">Your API token is encrypted and secure</p>
+            <div className="relative">
+              <input
+                id="api_token"
+                type="password"
+                value={formData.api_token}
+                onChange={(e) => handleInputChange('api_token', e.target.value)}
+                className="mt-1 block w-full px-3 py-2 pr-20 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter your Deriv API token or link your account above"
+                required
+              />
+              {!formData.api_token && (
+                <Button
+                  type="button"
+                  onClick={() => setShowAccountLinker(true)}
+                  className="absolute right-1 top-1 h-8 px-3 text-xs bg-blue-600 hover:bg-blue-700"
+                >
+                  Link Account
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              {linkedAccount ? 
+                '✅ Using linked Deriv account - secure and authorized' : 
+                'Click "Link Account" above for guided setup, or enter your API token manually'
+              }
+            </p>
           </div>
         </div>
 
+        {/* Rest of the form remains the same... */}
         {/* Market Selection */}
         <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
           <h3 className="text-xl font-semibold mb-4 flex items-center text-gray-800">
