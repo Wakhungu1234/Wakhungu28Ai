@@ -84,3 +84,5 @@ class TradeRecord(BaseModel):
     profit_loss: float
     execution_time: datetime = Field(default_factory=datetime.utcnow)
     contract_id: Optional[str] = None
+    martingale_step: int = 0  # Which martingale step this trade is
+    martingale_repeat: int = 0  # Which repeat attempt of the current martingale step
