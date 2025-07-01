@@ -200,17 +200,84 @@ class DerivWebSocketClient:
         if handler in self.tick_handlers:
             self.tick_handlers.remove(handler)
     
-    async def get_active_symbols(self):
-        """Get list of active trading symbols"""
+    async def get_account_balance(self):
+        """Get real account balance from Deriv API"""
         try:
-            message = json.dumps({
-                "active_symbols": "brief",
-                "product_type": "basic"
+            balance_message = json.dumps({
+                "balance": 1,
+                "subscribe": 1
             })
-            await self.websocket.send(message)
+            await self.websocket.send(balance_message)
+            logger.info("Requested account balance")
         except Exception as e:
-            logger.error(f"Failed to get active symbols: {e}")
-            raise
+            logger.error(f"Failed to get account balance: {e}")
+    
+    async def buy_contract(self, contract_type: str, symbol: str, stake: float, barrier: str = None):
+        """Execute real trade on Deriv"""
+        try:
+            # Determine contract parameters based on signal
+            if contract_type == "EVEN_ODD":
+                if "EVEN" in barrier:
+                    contract_params = {
+                        "buy": 1,
+                        "price": stake,
+                        "parameters": {
+                            "contract_type": "DIGITEVEN",
+                            "symbol": symbol,
+                            "duration": 1,
+                            "duration_unit": "t",  # 1 tick
+                            "currency": "USD"
+                        }
+                    }
+                else:  # ODD
+                    contract_params = {
+                        "buy": 1,
+                        "price": stake,
+                        "parameters": {
+                            "contract_type": "DIGITODD",
+                            "symbol": symbol,
+                            "duration": 1,
+                            "duration_unit": "t",
+                            "currency": "USD"
+                        }
+                    }
+            elif contract_type == "OVER_UNDER":
+                if "OVER" in barrier:
+                    contract_params = {
+                        "buy": 1,
+                        "price": stake,
+                        "parameters": {
+                            "contract_type": "DIGITOVER",
+                            "symbol": symbol,
+                            "duration": 1,
+                            "duration_unit": "t",
+                            "barrier": "5",
+                            "currency": "USD"
+                        }
+                    }
+                else:  # UNDER
+                    contract_params = {
+                        "buy": 1,
+                        "price": stake,
+                        "parameters": {
+                            "contract_type": "DIGITUNDER",
+                            "symbol": symbol,
+                            "duration": 1,
+                            "duration_unit": "t",
+                            "barrier": "5",
+                            "currency": "USD"
+                        }
+                    }
+            
+            # Send real trade request
+            await self.websocket.send(json.dumps(contract_params))
+            logger.info(f"🚀 REAL TRADE EXECUTED: {contract_type} on {symbol} with ${stake}")
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to execute real trade: {e}")
+            return False
 
 # Global WebSocket client instance
 deriv_client = None
