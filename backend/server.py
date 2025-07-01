@@ -313,8 +313,38 @@ async def get_all_bots():
         logger.error(f"Error getting bots: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.put("/bots/{bot_id}/restart")
-async def restart_bot(bot_id: str):
+@api_router.put("/bots/{bot_id}/stop")
+async def stop_bot(bot_id: str):
+    """Stop a trading bot without deleting it"""
+    try:
+        # Check if bot exists
+        bot_config = await db.bot_configs.find_one({"id": bot_id})
+        if not bot_config:
+            raise HTTPException(status_code=404, detail=f"Bot with ID {bot_id} not found")
+        
+        # Update bot status in runtime
+        if bot_id in active_bots:
+            active_bots[bot_id]["status"] = "STOPPED"
+            
+        # Update database
+        await db.bot_configs.update_one(
+            {"id": bot_id},
+            {"$set": {"is_active": False, "updated_at": datetime.utcnow()}}
+        )
+        
+        logger.info(f"🛑 Bot {bot_id} stopped successfully")
+        
+        return {
+            "status": "success", 
+            "message": f"🛑 Bot {bot_id} stopped successfully",
+            "bot_id": bot_id
+        }
+        
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        logger.error(f"Error stopping bot: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
     """Restart a stopped trading bot"""
     try:
         # Check if bot exists
