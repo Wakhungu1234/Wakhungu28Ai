@@ -212,7 +212,7 @@ async def create_quickstart_bot(config: BotConfigCreate):
         # Store in database
         await db.bot_configs.insert_one(bot_config.dict())
         
-        # Initialize bot runtime data
+        # Initialize bot runtime data with enhanced martingale tracking
         active_bots[bot_config.id] = {
             "config": bot_config,
             "status": "STARTING",
@@ -222,7 +222,11 @@ async def create_quickstart_bot(config: BotConfigCreate):
             "winning_trades": 0,
             "total_profit": 0.0,
             "current_streak": 0,
-            "last_trade_time": None
+            "last_trade_time": None,
+            "martingale_step": 0,  # Current martingale step
+            "martingale_repeat_count": 0,  # Current repeat count for this step
+            "recovery_mode": False,  # Whether bot is in recovery mode
+            "accumulated_loss": 0.0  # Total loss to recover
         }
         
         # Start bot trading task
