@@ -134,7 +134,7 @@ async def get_ticks(symbol: str, limit: int = 1000):
     """Get historical tick data for a symbol"""
     try:
         if symbol not in tick_storage:
-            raise HTTPException(status_code=404, detail="Symbol not found")
+            raise HTTPException(status_code=404, detail=f"Symbol '{symbol}' not found")
         
         # Get from memory first (faster)
         ticks = tick_storage[symbol][-limit:] if len(tick_storage[symbol]) >= limit else tick_storage[symbol]
@@ -145,6 +145,9 @@ async def get_ticks(symbol: str, limit: int = 1000):
             "count": len(ticks)
         }
         
+    except HTTPException as he:
+        # Re-raise HTTP exceptions
+        raise he
     except Exception as e:
         logger.error(f"Error getting ticks for {symbol}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
