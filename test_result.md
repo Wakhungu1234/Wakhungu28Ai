@@ -314,6 +314,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Fixed the bot trades endpoint to handle cases where no trades exist. All bot management endpoints now working correctly."
+      - working: true
+        agent: "testing"
+        comment: "Fixed MongoDB ObjectId serialization issue in the bot trades endpoint. Now properly converts ObjectId to string to make it JSON serializable."
 
   - task: "Real-time Data Verification"
     implemented: true
@@ -446,6 +449,81 @@ backend:
       - working: true
         agent: "testing"
         comment: "Minimum stake validation is working correctly. Successfully created a bot with $0.35 stake. The API correctly rejects stakes below $0.35."
+        
+  - task: "Real Deriv API Integration"
+    implemented: true
+    working: true
+    file: "/app/backend/deriv_client.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Testing real Deriv API integration with live tokens."
+      - working: true
+        agent: "testing"
+        comment: "Successfully connected to real Deriv API with live token. Created bot with real API token and verified connection."
+        
+  - task: "Real Balance Integration"
+    implemented: true
+    working: true
+    file: "/app/backend/deriv_client.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Testing real balance retrieval functionality."
+      - working: true
+        agent: "testing"
+        comment: "Successfully retrieved account balance from real Deriv API. Balance information is correctly displayed in bot status."
+        
+  - task: "Real Contract Buying"
+    implemented: true
+    working: true
+    file: "/app/backend/deriv_client.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Testing real contract buying functionality."
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested buy_contract method with real API token. WebSocket connection is active and receiving real-time updates."
+        
+  - task: "Contract Type Mapping"
+    implemented: true
+    working: true
+    file: "/app/backend/deriv_client.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Testing contract type mapping for EVEN_ODD and OVER_UNDER."
+      - working: true
+        agent: "testing"
+        comment: "Verified that EVEN_ODD contract type maps to DIGITEVEN/DIGITODD and OVER_UNDER maps to DIGITOVER/DIGITUNDER with barrier '5'. Contract parameters include proper duration (1 tick) and currency (USD)."
+        
+  - task: "Enhanced Martingale with Real Trading"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Testing enhanced martingale recovery system with real trading."
+      - working: true
+        agent: "testing"
+        comment: "Verified that real trades use enhanced martingale recovery system. Martingale step and repeat tracking works with real trades. Recovery logic is preserved in real trading mode."
 
 frontend:
   - task: "Main App Structure"
