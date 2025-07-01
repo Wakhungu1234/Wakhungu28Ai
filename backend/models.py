@@ -42,7 +42,7 @@ class BotConfig(BaseModel):
     martingale_multiplier: float = Field(ge=1.1, le=5.0)
     max_martingale_steps: int = Field(ge=1, le=10)
     selected_markets: List[str] = ["R_100"]
-    trade_interval: int = 3  # seconds
+    trade_interval: float = Field(default=0.5, ge=0.1, le=60)  # seconds, now accepts float values
     is_active: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
