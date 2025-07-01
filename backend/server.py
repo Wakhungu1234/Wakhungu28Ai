@@ -313,24 +313,102 @@ async def get_all_bots():
         logger.error(f"Error getting bots: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.delete("/bots/{bot_id}")
-async def stop_bot(bot_id: str):
-    """Stop and remove a trading bot"""
+@api_router.put("/bots/{bot_id}/restart")
+async def restart_bot(bot_id: str):
+    """Restart a stopped trading bot"""
     try:
-        # Update bot status in runtime
-        if bot_id in active_bots:
-            active_bots[bot_id]["status"] = "STOPPED"
-            
-        # Update database
+        # Check if bot exists
+        bot_config = await db.bot_configs.find_one({"id": bot_id})
+        if not bot_config:
+            raise HTTPException(status_code=404, detail=f"Bot with ID {bot_id} not found")
+        
+        # Update bot status to active in database
         await db.bot_configs.update_one(
             {"id": bot_id},
-            {"$set": {"is_active": False, "updated_at": datetime.utcnow()}}
+            {"$set": {"is_active": True, "updated_at": datetime.utcnow()}}
         )
         
-        return {"status": "success", "message": f"Bot {bot_id} stopped successfully"}
+        # Restart bot in runtime if it exists
+        if bot_id in active_bots:
+            bot_data = active_bots[bot_id]
+            bot_data["status"] = "STARTING"
+            # Reset some statistics for fresh start
+            bot_data["start_time"] = datetime.utcnow()
+            bot_data["martingale_step"] = 0
+            bot_data["martingale_repeat_count"] = 0
+            bot_data["recovery_mode"] = False
+            bot_data["accumulated_loss"] = 0.0
+            
+            # Start trading task
+            asyncio.create_task(run_bot_trading(bot_id))
+        else:
+            # Recreate bot runtime data if not exists
+            config = BotConfig(**bot_config)
+            active_bots[bot_id] = {
+                "config": config,
+                "status": "STARTING",
+                "start_time": datetime.utcnow(),
+                "current_balance": 1000.0,  # Reset to starting balance
+                "total_trades": 0,
+                "winning_trades": 0,
+                "total_profit": 0.0,
+                "current_streak": 0,
+                "last_trade_time": None,
+                "martingale_step": 0,
+                "martingale_repeat_count": 0,
+                "recovery_mode": False,
+                "accumulated_loss": 0.0
+            }
+            # Start trading task
+            asyncio.create_task(run_bot_trading(bot_id))
         
+        logger.info(f"🔄 Bot {bot_id} restarted successfully")
+        
+        return {
+            "status": "success", 
+            "message": f"🔄 Bot {bot_id} restarted successfully",
+            "bot_id": bot_id
+        }
+        
+    except HTTPException as he:
+        raise he
     except Exception as e:
-        logger.error(f"Error stopping bot: {e}")
+        logger.error(f"Error restarting bot: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.delete("/bots/{bot_id}")
+async def delete_bot(bot_id: str):
+    """Permanently delete a trading bot and all its data"""
+    try:
+        # Check if bot exists
+        bot_config = await db.bot_configs.find_one({"id": bot_id})
+        if not bot_config:
+            raise HTTPException(status_code=404, detail=f"Bot with ID {bot_id} not found")
+        
+        # Stop bot if it's running
+        if bot_id in active_bots:
+            active_bots[bot_id]["status"] = "STOPPED"
+            del active_bots[bot_id]
+        
+        # Delete bot configuration from database
+        await db.bot_configs.delete_one({"id": bot_id})
+        
+        # Delete all trade records for this bot
+        delete_result = await db.trade_records.delete_many({"bot_id": bot_id})
+        
+        logger.info(f"🗑️ Bot {bot_id} deleted successfully. Removed {delete_result.deleted_count} trade records.")
+        
+        return {
+            "status": "success", 
+            "message": f"🗑️ Bot {bot_id} permanently deleted",
+            "bot_id": bot_id,
+            "trades_deleted": delete_result.deleted_count
+        }
+        
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        logger.error(f"Error deleting bot: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/bots/{bot_id}/trades")
