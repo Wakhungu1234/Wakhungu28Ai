@@ -28,14 +28,15 @@ if not BASE_URL:
 API_URL = f"{BASE_URL}/api"
 print(f"Using API URL: {API_URL}")
 
-# Test data for bot creation with single market
+# Test data for bot creation with single market and enhanced martingale
 TEST_BOT_CONFIG = {
     "api_token": "test_token_123",
-    "stake_amount": 25.0,
-    "take_profit": 750.0,
-    "stop_loss": 300.0,
-    "martingale_multiplier": 2.5,
-    "max_martingale_steps": 4,
+    "stake_amount": 0.35,  # Testing minimum stake of $0.35
+    "take_profit": 100.0,
+    "stop_loss": 50.0,
+    "martingale_multiplier": 2.0,
+    "max_martingale_steps": 3,
+    "martingale_repeat_attempts": 3,  # Testing new martingale repeat attempts parameter
     "selected_markets": ["R_100"]
 }
 
