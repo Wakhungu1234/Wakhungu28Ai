@@ -47,12 +47,13 @@ const BotDashboard = () => {
   const stopBot = async (botId) => {
     setActionLoading(prev => ({ ...prev, [botId]: 'stopping' }));
     try {
-      const response = await fetch(`${BACKEND_URL}/api/bots/${botId}`, {
-        method: 'DELETE'
+      const response = await fetch(`${BACKEND_URL}/api/bots/${botId}/stop`, {
+        method: 'PUT'
       });
 
       if (response.ok) {
-        toast.success('🛑 Bot stopped successfully');
+        const result = await response.json();
+        toast.success(result.message || '🛑 Bot stopped successfully');
         fetchBots();
       } else {
         const error = await response.json();
@@ -70,22 +71,37 @@ const BotDashboard = () => {
   };
 
   const restartBot = async (botId) => {
+    if (!window.confirm('Are you sure you want to restart this bot? This will reset its statistics and start fresh trading.')) {
+      return;
+    }
+
     setActionLoading(prev => ({ ...prev, [botId]: 'restarting' }));
     try {
-      // For now, we'll show a coming soon message
-      // In a real implementation, you'd have a restart endpoint
-      toast.info('🔄 Restart feature coming soon!', {
-        description: 'For now, create a new bot with the same settings'
+      const response = await fetch(`${BACKEND_URL}/api/bots/${botId}/restart`, {
+        method: 'PUT'
       });
+
+      if (response.ok) {
+        const result = await response.json();
+        toast.success(result.message || '🔄 Bot restarted successfully');
+        fetchBots();
+      } else {
+        const error = await response.json();
+        toast.error('Failed to restart bot', {
+          description: error.detail || 'Unknown error occurred'
+        });
+      }
     } catch (error) {
-      toast.error('Connection error');
+      toast.error('Connection error', {
+        description: 'Failed to connect to server'
+      });
     } finally {
       setActionLoading(prev => ({ ...prev, [botId]: null }));
     }
   };
 
   const deleteBot = async (botId) => {
-    if (!window.confirm('Are you sure you want to permanently delete this bot?')) {
+    if (!window.confirm('⚠️ PERMANENT DELETION WARNING\n\nThis will permanently delete the bot and ALL its trading history. This action cannot be undone.\n\nAre you absolutely sure you want to proceed?')) {
       return;
     }
 
@@ -96,7 +112,8 @@ const BotDashboard = () => {
       });
 
       if (response.ok) {
-        toast.success('🗑️ Bot deleted successfully');
+        const result = await response.json();
+        toast.success(result.message || '🗑️ Bot deleted successfully');
         setBots(prev => prev.filter(bot => bot.id !== botId));
       } else {
         const error = await response.json();
@@ -105,7 +122,9 @@ const BotDashboard = () => {
         });
       }
     } catch (error) {
-      toast.error('Connection error');
+      toast.error('Connection error', {
+        description: 'Failed to connect to server'
+      });
     } finally {
       setActionLoading(prev => ({ ...prev, [botId]: null }));
     }
