@@ -212,6 +212,13 @@ async def create_quickstart_bot(config: BotConfigCreate):
         # Store in database
         await db.bot_configs.insert_one(bot_config.dict())
         
+        # Get real account balance if using real API token
+        try:
+            deriv_client = await get_deriv_client()
+            await deriv_client.get_account_balance()
+        except Exception as e:
+            logger.warning(f"Could not fetch real balance: {e}")
+        
         # Initialize bot runtime data with enhanced martingale tracking
         active_bots[bot_config.id] = {
             "config": bot_config,
