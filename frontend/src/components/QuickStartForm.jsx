@@ -9,11 +9,12 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const QuickStartForm = ({ onBotCreated }) => {
   const [formData, setFormData] = useState({
     api_token: '',
-    stake_amount: 10.0,
+    stake_amount: 2.0,  // Reduced default to $2 to showcase lower minimum
     take_profit: 500.0,
     stop_loss: 200.0,
     martingale_multiplier: 2.0,
     max_martingale_steps: 5,
+    martingale_repeat_attempts: 2,  // New: repeat attempts for recovery
     selected_markets: ['R_100']
   });
 
