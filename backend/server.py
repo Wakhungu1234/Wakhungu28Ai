@@ -364,7 +364,7 @@ async def run_bot_trading(bot_id: str):
                     best_signal = signals[0]
                     await execute_bot_trade(bot_id, best_signal)
                 
-                # Wait for the specified interval (ultra-aggressive 3 seconds)
+                # Wait for the specified interval (ULTRA-FAST 0.5 seconds)
                 await asyncio.sleep(config.trade_interval)
                 
             except Exception as e:
