@@ -296,17 +296,28 @@ def test_enhanced_analysis_engine():
             # Check for confidence levels and recommendations
             assert "even_odd_recommendation" in predictions, "Even/Odd recommendation missing"
             assert "over_under_recommendation" in predictions, "Over/Under recommendation missing"
+            assert "match_differ_recommendation" in predictions, "Match/Differ recommendation missing"
             
             # Verify confidence levels
             even_odd = predictions["even_odd_recommendation"]
             over_under = predictions["over_under_recommendation"]
+            match_differ = predictions["match_differ_recommendation"]
             
             assert "confidence" in even_odd, "Confidence level missing from Even/Odd recommendation"
             assert "confidence" in over_under, "Confidence level missing from Over/Under recommendation"
             assert "trade_type" in even_odd, "Trade type missing from Even/Odd recommendation"
             assert "trade_type" in over_under, "Trade type missing from Over/Under recommendation"
             
+            # Verify winning digits (color-coded digit recommendations)
+            assert "winning_digits" in even_odd, "Winning digits missing from Even/Odd recommendation"
+            assert "winning_digits" in over_under, "Winning digits missing from Over/Under recommendation"
+            
+            # Verify reason field for trading signals
+            assert "reason" in even_odd, "Reason missing from Even/Odd recommendation"
+            assert "reason" in over_under, "Reason missing from Over/Under recommendation"
+            
             print("✅ Enhanced Analysis Engine: PASSED - Returns confidence levels and trading recommendations")
+            print("✅ Color-coded digit recommendations included in analysis")
             return True
         else:
             print(f"Response: {response.text}")
