@@ -325,16 +325,25 @@ async def stop_bot(bot_id: str):
 async def get_bot_trades(bot_id: str, limit: int = 100):
     """Get trade history for a specific bot"""
     try:
+        # Check if bot exists
+        bot_config = await db.bot_configs.find_one({"id": bot_id})
+        if not bot_config:
+            raise HTTPException(status_code=404, detail=f"Bot with ID {bot_id} not found")
+            
+        # Get trades from database
         trades = await db.trade_records.find(
             {"bot_id": bot_id}
         ).sort("execution_time", -1).limit(limit).to_list(limit)
         
         return {
             "bot_id": bot_id,
-            "trades": trades,
-            "count": len(trades)
+            "trades": trades if trades else [],
+            "count": len(trades) if trades else 0
         }
         
+    except HTTPException as he:
+        # Re-raise HTTP exceptions
+        raise he
     except Exception as e:
         logger.error(f"Error getting bot trades: {e}")
         raise HTTPException(status_code=500, detail=str(e))
