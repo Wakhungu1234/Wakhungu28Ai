@@ -280,8 +280,12 @@ class DerivWebSocketClient:
             })
             await self.websocket.send(balance_message)
             logger.info("Requested account balance")
+            
+            # Return the current balance if available
+            return getattr(self, 'current_balance', 0)
         except Exception as e:
             logger.error(f"Failed to get account balance: {e}")
+            return 0
     
     async def buy_contract(self, contract_type: str, symbol: str, stake: float, barrier: str = None):
         """Execute real trade on Deriv"""
