@@ -211,17 +211,20 @@ frontend:
           agent: "main"
           comment: "Implemented professional tabbed interface with QuickStart and Bot Management tabs"
 
-  - task: "Bot Management Dashboard"
+  - task: "Enhanced Deriv Account Linking and Management"
     implemented: true
     working: true
-    file: "BotDashboard.jsx"
+    file: "/app/frontend/src/components/DerivAccountLinker.jsx"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
-        - working: true
-          agent: "main"
-          comment: "Created comprehensive bot dashboard with real-time status monitoring, performance metrics, and controls"
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented enhanced Deriv account linking with step-by-step wizard and account management dashboard"
+      - working: true
+        agent: "testing"
+        comment: "The enhanced Deriv account linking system works correctly. Password protection with '($_Wakhungu28_$)' works properly. Account tab appears as first tab. The 4-step account linking process (verification, token generation, authorization, success) works correctly. External links to Deriv.com open properly. Account dashboard shows account information with balance show/hide and refresh functionality. Account switching works correctly. Quick Start integration with linked accounts works properly with API token auto-population."
 
   - task: "Password Protection"
     implemented: true
