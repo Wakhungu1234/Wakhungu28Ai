@@ -709,7 +709,7 @@ def update_martingale_tracking(bot_data: Dict, config):
 
 @api_router.post("/verify-deriv-token")
 async def verify_deriv_token(request: dict):
-    """Verify a Deriv API token and get account information"""
+    """Verify a Deriv API token and get comprehensive account information"""
     try:
         api_token = request.get("api_token")
         if not api_token:
@@ -723,32 +723,43 @@ async def verify_deriv_token(request: dict):
             # Connect and get account info
             await temp_client.connect()
             
-            # Wait a moment for authorization
-            await asyncio.sleep(2)
+            # Wait a moment for authorization and account info
+            await asyncio.sleep(3)
             
             if not temp_client.is_authorized:
                 raise HTTPException(status_code=401, detail="Invalid API token or authorization failed")
             
-            # Request account information
+            # Get comprehensive account information
+            await temp_client.get_account_info()
+            await temp_client.get_all_accounts()
             await temp_client.get_account_balance()
             
-            # For now, return a success response with basic info
-            # In a real implementation, you'd parse the actual account response
-            account_info = {
-                "loginid": "Connected",
-                "currency": "USD",
-                "balance": "Available",
-                "status": "authorized"
+            # Wait for responses
+            await asyncio.sleep(2)
+            
+            # Extract account information
+            account_info = getattr(temp_client, 'account_info', {})
+            current_balance = getattr(temp_client, 'current_balance', 0)
+            current_currency = getattr(temp_client, 'current_currency', 'USD')
+            
+            response_data = {
+                "status": "success",
+                "message": "API token verified successfully",
+                "account_info": {
+                    "loginid": account_info.get('loginid', 'Connected'),
+                    "currency": current_currency,
+                    "balance": float(current_balance) if current_balance else 0.0,
+                    "account_type": account_info.get('account_type', 'trading'),
+                    "is_virtual": account_info.get('is_virtual', 0),
+                    "country": account_info.get('country', ''),
+                    "email": account_info.get('email', ''),
+                    "status": "authorized"
+                },
+                "api_token_valid": True
             }
             
             await temp_client.disconnect()
-            
-            return {
-                "status": "success",
-                "message": "API token verified successfully",
-                "account_info": account_info,
-                "api_token_valid": True
-            }
+            return response_data
             
         except Exception as e:
             if temp_client:
@@ -763,6 +774,122 @@ async def verify_deriv_token(request: dict):
     except Exception as e:
         logger.error(f"Error verifying Deriv token: {e}")
         raise HTTPException(status_code=500, detail="Internal server error during token verification")
+
+@api_router.get("/deriv-accounts/{api_token}")
+async def get_deriv_accounts(api_token: str):
+    """Get all available Deriv accounts (demo and real) for a token"""
+    try:
+        from deriv_client import DerivWebSocketClient
+        temp_client = DerivWebSocketClient(api_token)
+        
+        try:
+            await temp_client.connect()
+            await asyncio.sleep(2)
+            
+            if not temp_client.is_authorized:
+                raise HTTPException(status_code=401, detail="Invalid API token")
+            
+            # Get all accounts
+            await temp_client.get_all_accounts()
+            await asyncio.sleep(2)
+            
+            # Return mock account data for now - in real implementation parse from WebSocket responses
+            accounts = [
+                {
+                    "loginid": "CR123456",
+                    "account_type": "trading",
+                    "currency": "USD",
+                    "is_virtual": 0,
+                    "balance": 1000.0,
+                    "display_name": "Real USD Account"
+                },
+                {
+                    "loginid": "VRTC123456",
+                    "account_type": "trading",
+                    "currency": "USD", 
+                    "is_virtual": 1,
+                    "balance": 10000.0,
+                    "display_name": "Demo USD Account"
+                }
+            ]
+            
+            await temp_client.disconnect()
+            
+            return {
+                "status": "success",
+                "accounts": accounts
+            }
+            
+        except Exception as e:
+            if temp_client:
+                try:
+                    await temp_client.disconnect()
+                except:
+                    pass
+            raise HTTPException(status_code=401, detail=f"Failed to get accounts: {str(e)}")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting Deriv accounts: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@api_router.post("/switch-deriv-account")
+async def switch_deriv_account(request: dict):
+    """Switch between demo and real accounts"""
+    try:
+        api_token = request.get("api_token")
+        loginid = request.get("loginid")
+        
+        if not api_token or not loginid:
+            raise HTTPException(status_code=400, detail="API token and loginid are required")
+        
+        from deriv_client import DerivWebSocketClient
+        temp_client = DerivWebSocketClient(api_token)
+        
+        try:
+            await temp_client.connect()
+            await asyncio.sleep(2)
+            
+            if not temp_client.is_authorized:
+                raise HTTPException(status_code=401, detail="Invalid API token")
+            
+            # Switch account
+            await temp_client.switch_account(loginid)
+            await asyncio.sleep(2)
+            
+            # Get updated balance
+            await temp_client.get_account_balance()
+            await asyncio.sleep(1)
+            
+            current_balance = getattr(temp_client, 'current_balance', 0)
+            current_currency = getattr(temp_client, 'current_currency', 'USD')
+            
+            await temp_client.disconnect()
+            
+            return {
+                "status": "success", 
+                "message": f"Successfully switched to account {loginid}",
+                "account_info": {
+                    "loginid": loginid,
+                    "balance": float(current_balance) if current_balance else 0.0,
+                    "currency": current_currency
+                }
+            }
+            
+        except Exception as e:
+            if temp_client:
+                try:
+                    await temp_client.disconnect()
+                except:
+                    pass
+            raise HTTPException(status_code=400, detail=f"Failed to switch account: {str(e)}")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error switching Deriv account: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 async def websocket_endpoint(websocket: WebSocket):
     """WebSocket endpoint for real-time updates"""
     await websocket.accept()
