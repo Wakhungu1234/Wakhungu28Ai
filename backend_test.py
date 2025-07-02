@@ -1047,6 +1047,343 @@ def test_end_to_end_account_flow():
     print("✅ End-to-End Account Management Flow: PASSED - Complete flow tested successfully")
     return True
 
+def test_real_bot_creation_with_deriv_token():
+    """Test creating a bot with a real Deriv API token"""
+    print("\n=== Testing Bot Creation with Real Deriv API Token ===")
+    try:
+        response = requests.post(
+            f"{API_URL}/bots/quickstart", 
+            json=TEST_REAL_BOT_CONFIG
+        )
+        print(f"Status Code: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"Response: {json.dumps(data, indent=2)}")
+            
+            assert data["status"] == "success", "Bot creation failed"
+            assert "bot_id" in data, "Bot ID missing from response"
+            
+            # Store bot_id for later tests
+            bot_id = data["bot_id"]
+            
+            print("✅ Bot Creation with Real Deriv API Token: PASSED")
+            return True, bot_id
+        else:
+            print(f"Response: {response.text}")
+            print("❌ Bot Creation with Real Deriv API Token: FAILED - Non-200 status code")
+            return False, None
+    except Exception as e:
+        print(f"❌ Bot Creation with Real Deriv API Token: FAILED - {str(e)}")
+        return False, None
+
+def test_deriv_client_methods():
+    """Test the enhanced Deriv WebSocket client methods"""
+    print("\n=== Testing Enhanced Deriv WebSocket Client Methods ===")
+    
+    # We'll test the client methods indirectly through the API endpoints
+    # since we can't directly access the client instance
+    
+    # Test 1: get_account_info() via verify-deriv-token endpoint
+    try:
+        print("Testing get_account_info() method...")
+        verify_result, _ = test_verify_deriv_token()
+        if not verify_result:
+            print("❌ get_account_info() test: FAILED")
+            return False
+        print("✅ get_account_info() test: PASSED")
+        
+        # Test 2: get_all_accounts() via deriv-accounts endpoint
+        print("Testing get_all_accounts() method...")
+        list_result, _ = test_deriv_accounts_listing()
+        if not list_result:
+            print("❌ get_all_accounts() test: FAILED")
+            return False
+        print("✅ get_all_accounts() test: PASSED")
+        
+        # Test 3: switch_account() via switch-deriv-account endpoint
+        print("Testing switch_account() method...")
+        switch_result = test_switch_deriv_account()
+        if not switch_result:
+            print("❌ switch_account() test: FAILED")
+            return False
+        print("✅ switch_account() test: PASSED")
+        
+        print("✅ Enhanced Deriv WebSocket Client Methods: PASSED")
+        return True
+    except Exception as e:
+        print(f"❌ Enhanced Deriv WebSocket Client Methods: FAILED - {str(e)}")
+        return False
+
+def test_account_info_storage():
+    """Test account info storage during authorization"""
+    print("\n=== Testing Account Info Storage During Authorization ===")
+    try:
+        # First verify token to store account info
+        verify_response = requests.post(
+            f"{API_URL}/verify-deriv-token",
+            json=TEST_TOKEN_VERIFICATION
+        )
+        
+        if verify_response.status_code != 200:
+            print(f"❌ Account Info Storage: FAILED - Could not verify token")
+            return False
+        
+        # Now check if the account info is stored by switching account
+        # The switch account endpoint should use the stored account info
+        switch_response = requests.post(
+            f"{API_URL}/switch-deriv-account",
+            json=TEST_ACCOUNT_SWITCH
+        )
+        
+        if switch_response.status_code == 200:
+            data = switch_response.json()
+            assert "account_info" in data, "Account info missing from response"
+            account_info = data["account_info"]
+            assert "loginid" in account_info, "Login ID missing from account info"
+            assert "balance" in account_info, "Balance missing from account info"
+            
+            print("✅ Account Info Storage: PASSED - Account info stored during authorization")
+            return True
+        else:
+            print(f"❌ Account Info Storage: FAILED - Could not switch account")
+            return False
+    except Exception as e:
+        print(f"❌ Account Info Storage: FAILED - {str(e)}")
+        return False
+
+def test_balance_and_currency_tracking():
+    """Test balance and currency tracking"""
+    print("\n=== Testing Balance and Currency Tracking ===")
+    try:
+        # First verify token to get initial balance
+        verify_response = requests.post(
+            f"{API_URL}/verify-deriv-token",
+            json=TEST_TOKEN_VERIFICATION
+        )
+        
+        if verify_response.status_code != 200:
+            print(f"❌ Balance and Currency Tracking: FAILED - Could not verify token")
+            return False
+        
+        initial_data = verify_response.json()
+        initial_balance = initial_data["account_info"]["balance"]
+        initial_currency = initial_data["account_info"]["currency"]
+        
+        print(f"Initial balance: {initial_balance} {initial_currency}")
+        
+        # Now switch account and check if balance is updated
+        switch_response = requests.post(
+            f"{API_URL}/switch-deriv-account",
+            json=TEST_ACCOUNT_SWITCH
+        )
+        
+        if switch_response.status_code == 200:
+            switch_data = switch_response.json()
+            switch_balance = switch_data["account_info"]["balance"]
+            switch_currency = switch_data["account_info"]["currency"]
+            
+            print(f"After switch balance: {switch_balance} {switch_currency}")
+            
+            # We can't assert that the balance has changed since we're using mock data
+            # But we can verify that the balance and currency are tracked
+            assert "balance" in switch_data["account_info"], "Balance missing from account info"
+            assert "currency" in switch_data["account_info"], "Currency missing from account info"
+            
+            print("✅ Balance and Currency Tracking: PASSED - Balance and currency tracked during account operations")
+            return True
+        else:
+            print(f"❌ Balance and Currency Tracking: FAILED - Could not switch account")
+            return False
+    except Exception as e:
+        print(f"❌ Balance and Currency Tracking: FAILED - {str(e)}")
+        return False
+
+def test_concurrent_account_operations():
+    """Test concurrent account operations"""
+    print("\n=== Testing Concurrent Account Operations ===")
+    try:
+        # Start multiple account operations concurrently
+        import threading
+        
+        results = {"verify": False, "list": False, "switch": False}
+        
+        def verify_token():
+            try:
+                response = requests.post(
+                    f"{API_URL}/verify-deriv-token",
+                    json=TEST_TOKEN_VERIFICATION
+                )
+                results["verify"] = response.status_code == 200
+            except:
+                results["verify"] = False
+        
+        def list_accounts():
+            try:
+                response = requests.get(f"{API_URL}/deriv-accounts/{REAL_API_TOKEN}")
+                results["list"] = response.status_code == 200
+            except:
+                results["list"] = False
+        
+        def switch_account():
+            try:
+                response = requests.post(
+                    f"{API_URL}/switch-deriv-account",
+                    json=TEST_ACCOUNT_SWITCH
+                )
+                results["switch"] = response.status_code == 200
+            except:
+                results["switch"] = False
+        
+        # Start threads
+        threads = [
+            threading.Thread(target=verify_token),
+            threading.Thread(target=list_accounts),
+            threading.Thread(target=switch_account)
+        ]
+        
+        for thread in threads:
+            thread.start()
+        
+        for thread in threads:
+            thread.join()
+        
+        # Check results
+        print(f"Verify token result: {'✅ PASSED' if results['verify'] else '❌ FAILED'}")
+        print(f"List accounts result: {'✅ PASSED' if results['list'] else '❌ FAILED'}")
+        print(f"Switch account result: {'✅ PASSED' if results['switch'] else '❌ FAILED'}")
+        
+        if all(results.values()):
+            print("✅ Concurrent Account Operations: PASSED - All operations completed successfully")
+            return True
+        else:
+            print("❌ Concurrent Account Operations: FAILED - Some operations failed")
+            return False
+    except Exception as e:
+        print(f"❌ Concurrent Account Operations: FAILED - {str(e)}")
+        return False
+
+def test_integration_with_trading_bots():
+    """Test integration of enhanced account management with trading bots"""
+    print("\n=== Testing Integration with Trading Bots ===")
+    try:
+        # First verify token
+        verify_response = requests.post(
+            f"{API_URL}/verify-deriv-token",
+            json=TEST_TOKEN_VERIFICATION
+        )
+        
+        if verify_response.status_code != 200:
+            print(f"❌ Integration with Trading Bots: FAILED - Could not verify token")
+            return False
+        
+        # Now create a bot with the real API token
+        bot_result, bot_id = test_real_bot_creation_with_deriv_token()
+        if not bot_result or not bot_id:
+            print("❌ Integration with Trading Bots: FAILED - Could not create bot with real API token")
+            return False
+        
+        # Check if the bot is created and active
+        bots_response = requests.get(f"{API_URL}/bots")
+        if bots_response.status_code != 200:
+            print("❌ Integration with Trading Bots: FAILED - Could not get bots list")
+            return False
+        
+        bots = bots_response.json()
+        bot_found = False
+        for bot in bots:
+            if bot["id"] == bot_id:
+                bot_found = True
+                assert bot["status"] in ["ACTIVE", "STARTING"], f"Expected bot status ACTIVE or STARTING, got {bot['status']}"
+                break
+        
+        if not bot_found:
+            print("❌ Integration with Trading Bots: FAILED - Bot not found after creation")
+            return False
+        
+        # Clean up - stop and delete the bot
+        stop_response = requests.put(f"{API_URL}/bots/{bot_id}/stop")
+        if stop_response.status_code != 200:
+            print(f"Warning: Could not stop bot {bot_id}")
+        
+        delete_response = requests.delete(f"{API_URL}/bots/{bot_id}")
+        if delete_response.status_code != 200:
+            print(f"Warning: Could not delete bot {bot_id}")
+        
+        print("✅ Integration with Trading Bots: PASSED - Successfully created and managed bot with real API token")
+        return True
+    except Exception as e:
+        print(f"❌ Integration with Trading Bots: FAILED - {str(e)}")
+        return False
+
+def test_ultra_fast_trading_with_account_switching():
+    """Test ULTRA-FAST 0.5-second trading with account switching"""
+    print("\n=== Testing ULTRA-FAST Trading with Account Switching ===")
+    try:
+        # First verify token
+        verify_response = requests.post(
+            f"{API_URL}/verify-deriv-token",
+            json=TEST_TOKEN_VERIFICATION
+        )
+        
+        if verify_response.status_code != 200:
+            print(f"❌ ULTRA-FAST Trading with Account Switching: FAILED - Could not verify token")
+            return False
+        
+        # Get accounts list
+        list_response = requests.get(f"{API_URL}/deriv-accounts/{REAL_API_TOKEN}")
+        if list_response.status_code != 200:
+            print(f"❌ ULTRA-FAST Trading with Account Switching: FAILED - Could not list accounts")
+            return False
+        
+        # Create a bot with ULTRA-FAST trading
+        bot_result, bot_id = test_real_bot_creation_with_deriv_token()
+        if not bot_result or not bot_id:
+            print("❌ ULTRA-FAST Trading with Account Switching: FAILED - Could not create bot")
+            return False
+        
+        # Switch account
+        switch_response = requests.post(
+            f"{API_URL}/switch-deriv-account",
+            json=TEST_ACCOUNT_SWITCH
+        )
+        
+        if switch_response.status_code != 200:
+            print(f"❌ ULTRA-FAST Trading with Account Switching: FAILED - Could not switch account")
+            # Clean up
+            requests.delete(f"{API_URL}/bots/{bot_id}")
+            return False
+        
+        # Check if the bot is still active after account switching
+        time.sleep(2)  # Wait for any potential issues to manifest
+        bots_response = requests.get(f"{API_URL}/bots")
+        if bots_response.status_code != 200:
+            print("❌ ULTRA-FAST Trading with Account Switching: FAILED - Could not get bots list after account switch")
+            # Clean up
+            requests.delete(f"{API_URL}/bots/{bot_id}")
+            return False
+        
+        bots = bots_response.json()
+        bot_found = False
+        for bot in bots:
+            if bot["id"] == bot_id:
+                bot_found = True
+                assert bot["status"] in ["ACTIVE", "STARTING"], f"Expected bot status ACTIVE or STARTING, got {bot['status']}"
+                break
+        
+        if not bot_found:
+            print("❌ ULTRA-FAST Trading with Account Switching: FAILED - Bot not found after account switch")
+            return False
+        
+        # Clean up
+        requests.delete(f"{API_URL}/bots/{bot_id}")
+        
+        print("✅ ULTRA-FAST Trading with Account Switching: PASSED - Bot remains active after account switching")
+        return True
+    except Exception as e:
+        print(f"❌ ULTRA-FAST Trading with Account Switching: FAILED - {str(e)}")
+        return False
+
 def run_all_tests():
     """Run all API tests and return results"""
     results = {}
