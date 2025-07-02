@@ -991,6 +991,7 @@ async def refresh_bot_balance(request: dict):
         logger.error(f"Error refreshing bot balance: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
+@api_router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     """WebSocket endpoint for real-time updates"""
     await websocket.accept()
