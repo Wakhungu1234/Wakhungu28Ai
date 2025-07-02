@@ -7,6 +7,7 @@ import { Badge } from "./components/ui/badge";
 import QuickStartForm from "./components/QuickStartForm";
 import BotDashboard from "./components/BotDashboard";
 import RealTimeAnalysis from "./components/RealTimeAnalysis";
+import AccountDashboard from "./components/AccountDashboard";
 import PasswordProtection from "./components/PasswordProtection";
 import { Toaster } from "./components/ui/toaster";
 import { 
@@ -21,23 +22,34 @@ import {
   Settings,
   Target,
   Shield,
-  LogOut
+  LogOut,
+  User
 } from "lucide-react";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const Home = () => {
-  const [activeTab, setActiveTab] = useState("quickstart");
+  const [activeTab, setActiveTab] = useState("account");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [linkedAccount, setLinkedAccount] = useState(null);
 
   const handleBotCreated = (botData) => {
     // Switch to bot dashboard after creating a bot
     setActiveTab("dashboard");
   };
 
+  const handleAccountLinked = (accountData) => {
+    setLinkedAccount(accountData);
+  };
+
+  const handleAccountUpdate = (updatedAccountData) => {
+    setLinkedAccount(updatedAccountData);
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('wakhungu28ai_authenticated');
     setIsAuthenticated(false);
+    setLinkedAccount(null);
   };
 
   // Show password protection if not authenticated
@@ -128,6 +140,14 @@ const Home = () => {
           </div>
         </div>
 
+        {/* Account Dashboard (if linked) */}
+        {linkedAccount && (
+          <AccountDashboard 
+            linkedAccount={linkedAccount} 
+            onAccountUpdate={handleAccountUpdate}
+          />
+        )}
+
         {/* Pro Bot Tabs */}
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-8">
           <div className="flex items-center space-x-3 mb-6">
@@ -141,7 +161,14 @@ const Home = () => {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-8">
+            <TabsList className="grid w-full grid-cols-4 mb-8">
+              <TabsTrigger 
+                value="account" 
+                className="flex items-center space-x-2 text-lg py-3"
+              >
+                <User className="w-5 h-5" />
+                <span>💼 Account</span>
+              </TabsTrigger>
               <TabsTrigger 
                 value="quickstart" 
                 className="flex items-center space-x-2 text-lg py-3"
@@ -165,8 +192,20 @@ const Home = () => {
               </TabsTrigger>
             </TabsList>
 
+            <TabsContent value="account" className="space-y-6">
+              <QuickStartForm 
+                onBotCreated={handleBotCreated} 
+                onAccountLinked={handleAccountLinked}
+                linkedAccount={linkedAccount}
+              />
+            </TabsContent>
+
             <TabsContent value="quickstart" className="space-y-6">
-              <QuickStartForm onBotCreated={handleBotCreated} />
+              <QuickStartForm 
+                onBotCreated={handleBotCreated} 
+                onAccountLinked={handleAccountLinked}
+                linkedAccount={linkedAccount}
+              />
             </TabsContent>
 
             <TabsContent value="dashboard" className="space-y-6">
