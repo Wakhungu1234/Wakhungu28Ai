@@ -691,11 +691,24 @@ async def execute_bot_trade(bot_id: str, signal: Dict):
         
         # Get updated real balance from Deriv account after trade
         try:
-            updated_balance = await deriv_client.get_account_balance()
-            await asyncio.sleep(1)  # Wait for balance response
-            real_current_balance = getattr(deriv_client, 'current_balance', bot_data["current_balance"])
-            bot_data["current_balance"] = float(real_current_balance)
-            logger.info(f"💰 Updated bot balance from Deriv account: ${real_current_balance}")
+            updated_balance = None
+            await deriv_client.get_account_balance()
+            
+            # Wait longer for balance response and retry if needed
+            retry_count = 0
+            while retry_count < 3:
+                await asyncio.sleep(1)  # Wait for balance response
+                if hasattr(deriv_client, 'current_balance') and deriv_client.current_balance is not None:
+                    updated_balance = float(deriv_client.current_balance)
+                    bot_data["current_balance"] = updated_balance
+                    logger.info(f"💰 Updated bot balance from Deriv account: ${updated_balance}")
+                    break
+                retry_count += 1
+                
+            if updated_balance is None:
+                # If we can't get real balance, update with calculation
+                bot_data["current_balance"] += profit_loss
+                logger.warning(f"Could not fetch updated real balance, using calculated: ${bot_data['current_balance']}")
         except Exception as e:
             # If we can't get real balance, update with calculation
             bot_data["current_balance"] += profit_loss
