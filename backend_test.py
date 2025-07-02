@@ -59,6 +59,20 @@ TEST_ANALYSIS_REQUEST = {
     "tick_count": 100
 }
 
+# Real Deriv API token for testing
+REAL_API_TOKEN = "dG1ac29qbdRzjJG"
+
+# Test data for token verification
+TEST_TOKEN_VERIFICATION = {
+    "api_token": REAL_API_TOKEN
+}
+
+# Test data for account switching
+TEST_ACCOUNT_SWITCH = {
+    "api_token": REAL_API_TOKEN,
+    "loginid": "CR123456"  # This is a sample loginid, will be replaced with real one if available
+}
+
 # WebSocket connection for real-time data verification
 ws_connected = False
 ws_received_data = False
