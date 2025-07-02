@@ -403,7 +403,7 @@ async def restart_bot(bot_id: str):
             config = BotConfig(**bot_config)
             
             # Get current real balance from Deriv account
-            real_balance = 1000.0  # Default fallback
+            real_balance = None  # Will be set to actual balance or fallback
             try:
                 from deriv_client import DerivWebSocketClient
                 temp_client = DerivWebSocketClient(config.api_token)
@@ -412,19 +412,30 @@ async def restart_bot(bot_id: str):
                 
                 if temp_client.is_authorized:
                     await temp_client.get_account_balance()
-                    await asyncio.sleep(2)
-                    real_balance = getattr(temp_client, 'current_balance', 1000.0)
-                    logger.info(f"💰 Retrieved real account balance for restart: ${real_balance}")
+                    # Wait longer for balance response and retry if needed
+                    retry_count = 0
+                    while retry_count < 3:
+                        await asyncio.sleep(2)
+                        if hasattr(temp_client, 'current_balance') and temp_client.current_balance is not None:
+                            real_balance = float(temp_client.current_balance)
+                            logger.info(f"💰 Retrieved real account balance for restart: ${real_balance}")
+                            break
+                        retry_count += 1
                     
                 await temp_client.disconnect()
             except Exception as e:
                 logger.warning(f"Could not fetch real balance for restart: {e}")
                 
+            # Use real balance if available, otherwise fallback to default
+            if real_balance is None:
+                real_balance = 1000.0
+                logger.warning(f"Using fallback balance for restart: ${real_balance}")
+                
             active_bots[bot_id] = {
                 "config": config,
                 "status": "STARTING",
                 "start_time": datetime.utcnow(),
-                "current_balance": float(real_balance),  # Use REAL account balance
+                "current_balance": real_balance,  # Use REAL account balance
                 "total_trades": 0,
                 "winning_trades": 0,
                 "total_profit": 0.0,
