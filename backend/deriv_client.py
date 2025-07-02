@@ -212,6 +212,41 @@ class DerivWebSocketClient:
         if handler in self.tick_handlers:
             self.tick_handlers.remove(handler)
     
+    async def get_account_info(self):
+        """Get comprehensive account information"""
+        try:
+            account_message = json.dumps({
+                "authorize": self.api_token,
+                "get_account_status": 1,
+                "get_settings": 1
+            })
+            await self.websocket.send(account_message)
+            logger.info("Requested comprehensive account information")
+        except Exception as e:
+            logger.error(f"Failed to get account info: {e}")
+
+    async def get_all_accounts(self):
+        """Get all accounts (demo and real) for the user"""
+        try:
+            accounts_message = json.dumps({
+                "get_account_types": 1
+            })
+            await self.websocket.send(accounts_message)
+            logger.info("Requested all user accounts")
+        except Exception as e:
+            logger.error(f"Failed to get all accounts: {e}")
+
+    async def switch_account(self, loginid: str):
+        """Switch to a different account"""
+        try:
+            switch_message = json.dumps({
+                "switch_account": loginid
+            })
+            await self.websocket.send(switch_message)
+            logger.info(f"Switching to account: {loginid}")
+        except Exception as e:
+            logger.error(f"Failed to switch account: {e}")
+
     async def get_account_balance(self):
         """Get real account balance from Deriv API"""
         try:
