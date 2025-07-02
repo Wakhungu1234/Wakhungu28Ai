@@ -73,6 +73,18 @@ TEST_ACCOUNT_SWITCH = {
     "loginid": "CR123456"  # This is a sample loginid, will be replaced with real one if available
 }
 
+# Test data for bot creation with real Deriv API token
+TEST_REAL_BOT_CONFIG = {
+    "api_token": REAL_API_TOKEN,
+    "stake_amount": 0.35,
+    "take_profit": 100.0,
+    "stop_loss": 50.0,
+    "martingale_multiplier": 2.0,
+    "max_martingale_steps": 3,
+    "martingale_repeat_attempts": 3,
+    "selected_markets": ["R_100"]
+}
+
 # WebSocket connection for real-time data verification
 ws_connected = False
 ws_received_data = False
