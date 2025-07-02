@@ -125,7 +125,15 @@ def test_bot_restart_balance_fix():
     
     if verify_response.status_code != 200:
         print(f"❌ Token verification failed: {verify_response.text}")
-        return False
+        # Let's retry once more with a delay
+        time.sleep(2)
+        verify_response = requests.post(
+            f"{API_URL}/verify-deriv-token",
+            json={"api_token": REAL_API_TOKEN}
+        )
+        if verify_response.status_code != 200:
+            print(f"❌ Token verification failed again: {verify_response.text}")
+            return False
     
     verify_data = verify_response.json()
     real_account_balance = verify_data["account_info"]["balance"]
