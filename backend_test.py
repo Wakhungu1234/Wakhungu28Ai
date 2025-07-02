@@ -816,6 +816,228 @@ def test_martingale_repeat_attempts_validation():
         print(f"❌ Martingale Repeat Attempts Validation: FAILED - {str(e)}")
         return False
 
+def test_verify_deriv_token():
+    """Test the Deriv token verification endpoint"""
+    print("\n=== Testing Deriv Token Verification ===")
+    try:
+        response = requests.post(
+            f"{API_URL}/verify-deriv-token",
+            json=TEST_TOKEN_VERIFICATION
+        )
+        print(f"Status Code: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"Response: {json.dumps(data, indent=2)}")
+            
+            assert data["status"] == "success", "Token verification failed"
+            assert "account_info" in data, "Account info missing from response"
+            
+            # Verify account info contains required fields
+            account_info = data["account_info"]
+            assert "loginid" in account_info, "Login ID missing from account info"
+            assert "currency" in account_info, "Currency missing from account info"
+            assert "balance" in account_info, "Balance missing from account info"
+            assert "account_type" in account_info, "Account type missing from account info"
+            assert "is_virtual" in account_info is not None, "Virtual flag missing from account info"
+            assert "country" in account_info, "Country missing from account info"
+            assert "email" in account_info, "Email missing from account info"
+            
+            print("✅ Deriv Token Verification: PASSED - Returns detailed account information")
+            return True, account_info["loginid"]
+        else:
+            print(f"Response: {response.text}")
+            print("❌ Deriv Token Verification: FAILED - Non-200 status code")
+            return False, None
+    except Exception as e:
+        print(f"❌ Deriv Token Verification: FAILED - {str(e)}")
+        return False, None
+
+def test_deriv_accounts_listing():
+    """Test the Deriv accounts listing endpoint"""
+    print("\n=== Testing Deriv Accounts Listing ===")
+    try:
+        response = requests.get(f"{API_URL}/deriv-accounts/{REAL_API_TOKEN}")
+        print(f"Status Code: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"Response: {json.dumps(data, indent=2)}")
+            
+            assert data["status"] == "success", "Accounts listing failed"
+            assert "accounts" in data, "Accounts missing from response"
+            
+            accounts = data["accounts"]
+            assert len(accounts) > 0, "No accounts returned"
+            
+            # Verify account data includes required fields
+            for account in accounts:
+                assert "loginid" in account, "Login ID missing from account"
+                assert "account_type" in account, "Account type missing from account"
+                assert "currency" in account, "Currency missing from account"
+                assert "is_virtual" in account is not None, "Virtual flag missing from account"
+                assert "balance" in account, "Balance missing from account"
+                assert "display_name" in account, "Display name missing from account"
+            
+            # Check if both demo and real accounts are returned
+            has_demo = any(account["is_virtual"] == 1 for account in accounts)
+            has_real = any(account["is_virtual"] == 0 for account in accounts)
+            
+            if has_demo and has_real:
+                print("✅ Both demo and real accounts returned")
+            elif has_demo:
+                print("⚠️ Only demo accounts returned")
+            elif has_real:
+                print("⚠️ Only real accounts returned")
+            else:
+                print("⚠️ Account types could not be determined")
+            
+            # Get a loginid for account switching test
+            loginid = accounts[0]["loginid"] if accounts else None
+            
+            print("✅ Deriv Accounts Listing: PASSED - Returns account list with balance and type information")
+            return True, loginid
+        else:
+            print(f"Response: {response.text}")
+            print("❌ Deriv Accounts Listing: FAILED - Non-200 status code")
+            return False, None
+    except Exception as e:
+        print(f"❌ Deriv Accounts Listing: FAILED - {str(e)}")
+        return False, None
+
+def test_switch_deriv_account(loginid=None):
+    """Test the Deriv account switching endpoint"""
+    print("\n=== Testing Deriv Account Switching ===")
+    
+    # Use provided loginid or default to the one in TEST_ACCOUNT_SWITCH
+    switch_data = TEST_ACCOUNT_SWITCH.copy()
+    if loginid:
+        switch_data["loginid"] = loginid
+    
+    try:
+        response = requests.post(
+            f"{API_URL}/switch-deriv-account",
+            json=switch_data
+        )
+        print(f"Status Code: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"Response: {json.dumps(data, indent=2)}")
+            
+            assert data["status"] == "success", "Account switching failed"
+            assert "message" in data, "Message missing from response"
+            assert "account_info" in data, "Account info missing from response"
+            
+            # Verify account info contains required fields
+            account_info = data["account_info"]
+            assert "loginid" in account_info, "Login ID missing from account info"
+            assert "balance" in account_info, "Balance missing from account info"
+            assert "currency" in account_info, "Currency missing from account info"
+            
+            # Verify the loginid matches the requested one
+            assert account_info["loginid"] == switch_data["loginid"], f"Expected loginid {switch_data['loginid']}, got {account_info['loginid']}"
+            
+            print("✅ Deriv Account Switching: PASSED - Successfully switched account and returned updated information")
+            return True
+        else:
+            print(f"Response: {response.text}")
+            print("❌ Deriv Account Switching: FAILED - Non-200 status code")
+            return False
+    except Exception as e:
+        print(f"❌ Deriv Account Switching: FAILED - {str(e)}")
+        return False
+
+def test_error_handling_for_account_operations():
+    """Test error handling for account operations with invalid data"""
+    print("\n=== Testing Error Handling for Account Operations ===")
+    
+    # Test 1: Invalid token for verification
+    try:
+        invalid_token = {"api_token": "invalid_token_123"}
+        response = requests.post(f"{API_URL}/verify-deriv-token", json=invalid_token)
+        print(f"Invalid token verification - Status Code: {response.status_code}")
+        assert response.status_code in [401, 400], f"Expected 401 or 400 for invalid token, got {response.status_code}"
+        print("✅ Invalid token verification test: PASSED")
+    except Exception as e:
+        print(f"❌ Invalid token verification test: FAILED - {str(e)}")
+        return False
+    
+    # Test 2: Invalid token for accounts listing
+    try:
+        response = requests.get(f"{API_URL}/deriv-accounts/invalid_token_123")
+        print(f"Invalid token accounts listing - Status Code: {response.status_code}")
+        assert response.status_code in [401, 400], f"Expected 401 or 400 for invalid token, got {response.status_code}"
+        print("✅ Invalid token accounts listing test: PASSED")
+    except Exception as e:
+        print(f"❌ Invalid token accounts listing test: FAILED - {str(e)}")
+        return False
+    
+    # Test 3: Invalid account switching
+    try:
+        invalid_switch = {
+            "api_token": REAL_API_TOKEN,
+            "loginid": "INVALID_LOGIN_ID"
+        }
+        response = requests.post(f"{API_URL}/switch-deriv-account", json=invalid_switch)
+        print(f"Invalid account switching - Status Code: {response.status_code}")
+        assert response.status_code in [400, 401], f"Expected 400 or 401 for invalid loginid, got {response.status_code}"
+        print("✅ Invalid account switching test: PASSED")
+    except Exception as e:
+        print(f"❌ Invalid account switching test: FAILED - {str(e)}")
+        return False
+    
+    # Test 4: Missing required fields
+    try:
+        missing_fields = {"api_token": ""}
+        response = requests.post(f"{API_URL}/verify-deriv-token", json=missing_fields)
+        print(f"Missing fields - Status Code: {response.status_code}")
+        assert response.status_code in [400, 422], f"Expected 400 or 422 for missing fields, got {response.status_code}"
+        print("✅ Missing fields test: PASSED")
+    except Exception as e:
+        print(f"❌ Missing fields test: FAILED - {str(e)}")
+        return False
+    
+    print("✅ Error Handling for Account Operations: PASSED")
+    return True
+
+def test_end_to_end_account_flow():
+    """Test the complete account management flow: verify token, list accounts, switch account"""
+    print("\n=== Testing End-to-End Account Management Flow ===")
+    
+    # Step 1: Verify token and get account info
+    print("Step 1: Verifying token and getting account info...")
+    verify_result, loginid = test_verify_deriv_token()
+    if not verify_result:
+        print("❌ End-to-End Account Flow: FAILED - Could not verify token")
+        return False
+    
+    print(f"✅ Step 1 Complete: Token verified and account info retrieved")
+    
+    # Step 2: List accounts
+    print("Step 2: Listing accounts...")
+    list_result, switch_loginid = test_deriv_accounts_listing()
+    if not list_result:
+        print("❌ End-to-End Account Flow: FAILED - Could not list accounts")
+        return False
+    
+    print("✅ Step 2 Complete: Accounts listed successfully")
+    
+    # Step 3: Switch account if we have a loginid
+    if switch_loginid:
+        print(f"Step 3: Switching to account {switch_loginid}...")
+        switch_result = test_switch_deriv_account(switch_loginid)
+        if not switch_result:
+            print("❌ End-to-End Account Flow: FAILED - Could not switch account")
+            return False
+        
+        print("✅ Step 3 Complete: Account switched successfully")
+    else:
+        print("⚠️ Step 3 Skipped: No loginid available for account switching")
+    
+    print("✅ End-to-End Account Management Flow: PASSED - Complete flow tested successfully")
+    return True
+
 def run_all_tests():
     """Run all API tests and return results"""
     results = {}
