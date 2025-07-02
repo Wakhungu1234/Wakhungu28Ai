@@ -351,7 +351,7 @@ backend:
         agent: "testing"
         comment: "Fixed MongoDB ObjectId serialization issue in the bot trades endpoint. Now properly converts ObjectId to string to make it JSON serializable."
 
-  - task: "Real-time Data Verification"
+  - task: "Enhanced Deriv Account Management"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -361,13 +361,10 @@ backend:
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Implemented WebSocket connection to Deriv API and tick data storage"
+        comment: "Implemented enhanced Deriv account management with comprehensive token verification, account listing, and account switching capabilities"
       - working: true
         agent: "testing"
-        comment: "WebSocket connection is active and receiving tick data. Successfully connected to /api/ws endpoint and received real-time updates for bot status and tick data for all markets."
-      - working: true
-        agent: "testing"
-        comment: "WebSocket connection still working correctly. Receiving tick data from multiple markets."
+        comment: "Comprehensive testing of the enhanced Deriv account management features completed. Token verification endpoint (/api/verify-deriv-token) returns detailed account information including loginid, currency, balance, account_type, is_virtual, country, and email. Account listing endpoint (/api/deriv-accounts/{api_token}) returns both demo and real accounts with proper balance and account type information. Account switching endpoint (/api/switch-deriv-account) successfully switches between accounts and returns updated account information. Error handling for invalid tokens and missing fields works correctly. End-to-end account management flow (verify token, list accounts, switch account) works correctly."
 
   - task: "Error Handling"
     implemented: true
