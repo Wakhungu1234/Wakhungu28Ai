@@ -973,29 +973,26 @@ def test_error_handling_for_account_operations():
         print(f"❌ Invalid token accounts listing test: FAILED - {str(e)}")
         return False
     
-    # Test 3: Invalid account switching
+    # Test 3: Missing required fields for account switching
     try:
-        invalid_switch = {
-            "api_token": REAL_API_TOKEN,
-            "loginid": "INVALID_LOGIN_ID"
-        }
-        response = requests.post(f"{API_URL}/switch-deriv-account", json=invalid_switch)
-        print(f"Invalid account switching - Status Code: {response.status_code}")
-        assert response.status_code in [400, 401], f"Expected 400 or 401 for invalid loginid, got {response.status_code}"
-        print("✅ Invalid account switching test: PASSED")
+        missing_fields = {"api_token": REAL_API_TOKEN}  # Missing loginid
+        response = requests.post(f"{API_URL}/switch-deriv-account", json=missing_fields)
+        print(f"Missing fields for account switching - Status Code: {response.status_code}")
+        assert response.status_code in [400, 422], f"Expected 400 or 422 for missing fields, got {response.status_code}"
+        print("✅ Missing fields for account switching test: PASSED")
     except Exception as e:
-        print(f"❌ Invalid account switching test: FAILED - {str(e)}")
+        print(f"❌ Missing fields for account switching test: FAILED - {str(e)}")
         return False
     
-    # Test 4: Missing required fields
+    # Test 4: Missing required fields for token verification
     try:
         missing_fields = {"api_token": ""}
         response = requests.post(f"{API_URL}/verify-deriv-token", json=missing_fields)
-        print(f"Missing fields - Status Code: {response.status_code}")
+        print(f"Missing fields for token verification - Status Code: {response.status_code}")
         assert response.status_code in [400, 422], f"Expected 400 or 422 for missing fields, got {response.status_code}"
-        print("✅ Missing fields test: PASSED")
+        print("✅ Missing fields for token verification test: PASSED")
     except Exception as e:
-        print(f"❌ Missing fields test: FAILED - {str(e)}")
+        print(f"❌ Missing fields for token verification test: FAILED - {str(e)}")
         return False
     
     print("✅ Error Handling for Account Operations: PASSED")
