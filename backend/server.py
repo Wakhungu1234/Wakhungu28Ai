@@ -212,19 +212,33 @@ async def create_quickstart_bot(config: BotConfigCreate):
         # Store in database
         await db.bot_configs.insert_one(bot_config.dict())
         
-        # Get real account balance if using real API token
+        # Get real account balance from user's Deriv account
+        real_balance = 1000.0  # Default fallback
         try:
-            deriv_client = await get_deriv_client()
-            await deriv_client.get_account_balance()
+            # Create temporary client to get real balance
+            from deriv_client import DerivWebSocketClient
+            temp_client = DerivWebSocketClient(config.api_token)
+            await temp_client.connect()
+            await asyncio.sleep(2)  # Wait for connection and authorization
+            
+            if temp_client.is_authorized:
+                await temp_client.get_account_balance()
+                await asyncio.sleep(2)  # Wait for balance response
+                real_balance = getattr(temp_client, 'current_balance', 1000.0)
+                logger.info(f"💰 Retrieved real account balance: ${real_balance}")
+            else:
+                logger.warning("Failed to authorize with Deriv API, using default balance")
+                
+            await temp_client.disconnect()
         except Exception as e:
-            logger.warning(f"Could not fetch real balance: {e}")
+            logger.warning(f"Could not fetch real balance: {e}, using default balance")
         
-        # Initialize bot runtime data with enhanced martingale tracking
+        # Initialize bot runtime data with REAL account balance
         active_bots[bot_config.id] = {
             "config": bot_config,
             "status": "STARTING",
             "start_time": datetime.utcnow(),
-            "current_balance": 1000.0,  # Starting balance
+            "current_balance": float(real_balance),  # Use REAL account balance
             "total_trades": 0,
             "winning_trades": 0,
             "total_profit": 0.0,
