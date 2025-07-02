@@ -1092,6 +1092,23 @@ def run_all_tests():
     # Test 12: End-to-End Bot Flow (Create, Stop, Restart, Delete)
     results["End-to-End Bot Flow"] = test_end_to_end_bot_flow()
     
+    # Test 13: Deriv Token Verification
+    verify_result, _ = test_verify_deriv_token()
+    results["Deriv Token Verification"] = verify_result
+    
+    # Test 14: Deriv Accounts Listing
+    list_result, _ = test_deriv_accounts_listing()
+    results["Deriv Accounts Listing"] = list_result
+    
+    # Test 15: Deriv Account Switching
+    results["Deriv Account Switching"] = test_switch_deriv_account()
+    
+    # Test 16: Error Handling for Account Operations
+    results["Error Handling for Account Operations"] = test_error_handling_for_account_operations()
+    
+    # Test 17: End-to-End Account Management Flow
+    results["End-to-End Account Management Flow"] = test_end_to_end_account_flow()
+    
     # Print summary
     print("\n=== TEST SUMMARY ===")
     for test_name, passed in results.items():
