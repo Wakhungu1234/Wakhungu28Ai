@@ -213,7 +213,7 @@ async def create_quickstart_bot(config: BotConfigCreate):
         await db.bot_configs.insert_one(bot_config.dict())
         
         # Get real account balance from user's Deriv account
-        real_balance = 1000.0  # Default fallback
+        real_balance = None  # Will be set to actual balance or fallback
         try:
             # Create temporary client to get real balance
             from deriv_client import DerivWebSocketClient
@@ -223,9 +223,15 @@ async def create_quickstart_bot(config: BotConfigCreate):
             
             if temp_client.is_authorized:
                 await temp_client.get_account_balance()
-                await asyncio.sleep(2)  # Wait for balance response
-                real_balance = getattr(temp_client, 'current_balance', 1000.0)
-                logger.info(f"💰 Retrieved real account balance: ${real_balance}")
+                # Wait longer for balance response and retry if needed
+                retry_count = 0
+                while retry_count < 3:
+                    await asyncio.sleep(2)
+                    if hasattr(temp_client, 'current_balance') and temp_client.current_balance is not None:
+                        real_balance = float(temp_client.current_balance)
+                        logger.info(f"💰 Retrieved real account balance: ${real_balance}")
+                        break
+                    retry_count += 1
             else:
                 logger.warning("Failed to authorize with Deriv API, using default balance")
                 
@@ -233,12 +239,17 @@ async def create_quickstart_bot(config: BotConfigCreate):
         except Exception as e:
             logger.warning(f"Could not fetch real balance: {e}, using default balance")
         
+        # Use real balance if available, otherwise fallback to default
+        if real_balance is None:
+            real_balance = 1000.0
+            logger.warning(f"Using fallback balance: ${real_balance}")
+        
         # Initialize bot runtime data with REAL account balance
         active_bots[bot_config.id] = {
             "config": bot_config,
             "status": "STARTING",
             "start_time": datetime.utcnow(),
-            "current_balance": float(real_balance),  # Use REAL account balance
+            "current_balance": real_balance,  # Use REAL account balance
             "total_trades": 0,
             "winning_trades": 0,
             "total_profit": 0.0,
