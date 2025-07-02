@@ -663,10 +663,22 @@ async def execute_bot_trade(bot_id: str, signal: Dict):
             # Update martingale tracking
             update_martingale_tracking(bot_data, config)
 
-        # Update bot statistics
+        # Update bot statistics with REAL account balance
         bot_data["total_trades"] += 1
         bot_data["total_profit"] += profit_loss
-        bot_data["current_balance"] += profit_loss
+        
+        # Get updated real balance from Deriv account after trade
+        try:
+            updated_balance = await deriv_client.get_account_balance()
+            await asyncio.sleep(1)  # Wait for balance response
+            real_current_balance = getattr(deriv_client, 'current_balance', bot_data["current_balance"])
+            bot_data["current_balance"] = float(real_current_balance)
+            logger.info(f"💰 Updated bot balance from Deriv account: ${real_current_balance}")
+        except Exception as e:
+            # If we can't get real balance, update with calculation
+            bot_data["current_balance"] += profit_loss
+            logger.warning(f"Could not fetch updated real balance, using calculated: {e}")
+            
         bot_data["last_trade_time"] = datetime.utcnow()
         
         # Record trade in database with martingale info
