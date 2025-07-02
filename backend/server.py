@@ -981,12 +981,23 @@ async def refresh_bot_balance(request: dict):
             
             if temp_client.is_authorized:
                 await temp_client.get_account_balance()
-                await asyncio.sleep(2)
-                real_balance = getattr(temp_client, 'current_balance', bot_data["current_balance"])
+                
+                # Wait longer for balance response and retry if needed
+                real_balance = None
+                retry_count = 0
+                while retry_count < 3:
+                    await asyncio.sleep(2)
+                    if hasattr(temp_client, 'current_balance') and temp_client.current_balance is not None:
+                        real_balance = float(temp_client.current_balance)
+                        break
+                    retry_count += 1
+                
+                if real_balance is None:
+                    raise HTTPException(status_code=500, detail="Failed to retrieve real account balance")
                 
                 # Update bot balance
                 old_balance = bot_data["current_balance"]
-                bot_data["current_balance"] = float(real_balance)
+                bot_data["current_balance"] = real_balance
                 
                 await temp_client.disconnect()
                 
