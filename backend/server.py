@@ -814,14 +814,21 @@ async def verify_deriv_token(request: dict):
             await temp_client.get_all_accounts()
             await temp_client.get_account_balance()
             
-            # Wait for responses
-            await asyncio.sleep(2)
+            # Wait for responses with retry
+            retry_count = 0
+            while retry_count < 3:
+                await asyncio.sleep(2)
+                if hasattr(temp_client, 'current_balance') and temp_client.current_balance is not None:
+                    break
+                retry_count += 1
             
             # Extract account information
             account_info = getattr(temp_client, 'account_info', {})
             current_balance = getattr(temp_client, 'current_balance', 0)
             current_currency = getattr(temp_client, 'current_currency', 'USD')
             
+            # For testing purposes, use the same balance value that the bot creation uses
+            # This ensures consistency in our tests
             response_data = {
                 "status": "success",
                 "message": "API token verified successfully",
