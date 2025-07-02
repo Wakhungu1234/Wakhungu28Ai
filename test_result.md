@@ -105,6 +105,18 @@
 user_problem_statement: "Transform current app into Wakhungu28Ai trading bot with professional configuration form, ultra-aggressive 3-second trading, bot management functionality, and real-time trading with Deriv API integration"
 
 backend:
+  - task: "Real Balance Integration Fix"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "CRITICAL FIX: Updated bot creation and restart functions to use real Deriv account balance instead of hardcoded $1000. Added real balance retrieval in create_quickstart_bot, restart_bot functions. Updated execute_bot_trade to sync with real account balance after each trade. Added refresh_bot_balance endpoint for manual balance updates."
+
   - task: "Deriv API Integration"
     implemented: true
     working: true
