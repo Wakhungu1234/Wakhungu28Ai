@@ -287,6 +287,8 @@ agent_communication:
       message: "Successfully completed full Wakhungu28Ai integration with Deriv API token (dG1ac29qbdRzjJG). All backend and frontend components implemented and tested. Ready for user access."
     - agent: "testing"
       message: "Backend testing completed successfully. All core endpoints working correctly. WebSocket connection active with real-time Deriv data streaming."
+    - agent: "testing"
+      message: "Completed comprehensive testing of the enhanced Deriv account management features. Token verification endpoint (/api/verify-deriv-token) returns detailed account information including loginid, currency, balance, account_type, is_virtual, country, and email. Account listing endpoint (/api/deriv-accounts/{api_token}) returns both demo and real accounts with proper balance and account type information. Account switching endpoint (/api/switch-deriv-account) successfully switches between accounts and returns updated account information. Error handling for invalid tokens and missing fields works correctly. End-to-end account management flow (verify token, list accounts, switch account) works correctly."
 
 user_problem_statement: "Please test the Wakhungu28Ai trading bot backend API thoroughly."
 
