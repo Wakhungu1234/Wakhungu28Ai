@@ -292,7 +292,7 @@ agent_communication:
   - agent: "testing"
     message: "Completed comprehensive testing of the enhanced Deriv account management features with trading bots integration. Successfully tested account info storage during authorization, balance and currency tracking, concurrent account operations, and integration with trading bots. The enhanced Deriv WebSocket client methods (get_account_info, get_all_accounts, switch_account) work correctly. ULTRA-FAST 0.5-second trading with account switching is supported. The WebSocket connection test failed due to 403 Forbidden error, but this is likely due to the test environment configuration rather than an issue with the implementation."
 
-user_problem_statement: "Please test the Wakhungu28Ai trading bot backend API thoroughly."
+user_problem_statement: "Fix trading bot balance issue - bot uses constant $1000 USD instead of real linked Deriv account balance for trading. Bot should use actual account balance and make real profits in connected account."
 
 backend:
   - task: "API Health Check"
