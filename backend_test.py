@@ -1389,6 +1389,9 @@ def run_all_tests():
     results = {}
     bot_id = None
     
+    # Basic API Tests
+    print("\n=== RUNNING BASIC API TESTS ===")
+    
     # Test 1: API Health Check
     results["API Health Check"] = test_api_health()
     
@@ -1412,6 +1415,7 @@ def run_all_tests():
     
     # Test 6: Bot Management
     bots_list_result, list_bot_id = test_bots_list()
+    results["Bot Management"] = bots_list_result
     if list_bot_id and not bot_id:
         bot_id = list_bot_id
     
@@ -1438,6 +1442,9 @@ def run_all_tests():
     # Test 12: End-to-End Bot Flow (Create, Stop, Restart, Delete)
     results["End-to-End Bot Flow"] = test_end_to_end_bot_flow()
     
+    # Enhanced Deriv Account Management Tests
+    print("\n=== RUNNING ENHANCED DERIV ACCOUNT MANAGEMENT TESTS ===")
+    
     # Test 13: Deriv Token Verification
     verify_result, _ = test_verify_deriv_token()
     results["Deriv Token Verification"] = verify_result
@@ -1455,15 +1462,39 @@ def run_all_tests():
     # Test 17: End-to-End Account Management Flow
     results["End-to-End Account Management Flow"] = test_end_to_end_account_flow()
     
+    # Test 18: Enhanced Deriv WebSocket Client Methods
+    results["Enhanced Deriv WebSocket Client Methods"] = test_deriv_client_methods()
+    
+    # Test 19: Account Info Storage During Authorization
+    results["Account Info Storage"] = test_account_info_storage()
+    
+    # Test 20: Balance and Currency Tracking
+    results["Balance and Currency Tracking"] = test_balance_and_currency_tracking()
+    
+    # Test 21: Concurrent Account Operations
+    results["Concurrent Account Operations"] = test_concurrent_account_operations()
+    
+    # Test 22: Integration with Trading Bots
+    results["Integration with Trading Bots"] = test_integration_with_trading_bots()
+    
+    # Test 23: ULTRA-FAST Trading with Account Switching
+    results["ULTRA-FAST Trading with Account Switching"] = test_ultra_fast_trading_with_account_switching()
+    
     # Print summary
     print("\n=== TEST SUMMARY ===")
     for test_name, passed in results.items():
         status = "✅ PASSED" if passed else "❌ FAILED"
         print(f"{test_name}: {status}")
     
+    # Print overall result
+    passed_count = sum(1 for passed in results.values() if passed)
+    total_count = len(results)
+    print(f"\nOverall Result: {passed_count}/{total_count} tests passed ({passed_count/total_count*100:.1f}%)")
+    
     return results
 
 if __name__ == "__main__":
     print(f"Starting backend API tests at {datetime.now().isoformat()}")
     print("Testing ULTRA-FAST Wakhungu28Ai Trading Bot Backend")
+    print("Testing Enhanced Deriv Account Management Features")
     run_all_tests()
