@@ -316,11 +316,14 @@ async def get_all_bots():
                 uptime_delta = datetime.utcnow() - start_time
                 uptime = str(uptime_delta).split('.')[0]  # Remove microseconds
             
+            # Get current balance from runtime data, ensuring it's the real balance
+            current_balance = runtime_data.get("current_balance", 0)
+            
             status = BotStatus(
                 id=bot_id,
                 name=config["name"],
                 status=runtime_data.get("status", "STOPPED"),
-                current_balance=runtime_data.get("current_balance", 0),
+                current_balance=current_balance,
                 total_trades=total_trades,
                 winning_trades=winning_trades,
                 win_rate=round(win_rate, 2),
