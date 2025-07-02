@@ -285,6 +285,8 @@ test_plan:
 agent_communication:
     - agent: "main"
       message: "Successfully completed full Wakhungu28Ai integration with Deriv API token (dG1ac29qbdRzjJG). All backend and frontend components implemented and tested. Ready for user access."
+    - agent: "main"
+      message: "CRITICAL ISSUE IDENTIFIED: Trading bot uses hardcoded $1000 balance instead of real Deriv account balance. Need to fix balance integration to use actual account balance from Deriv API."
     - agent: "testing"
       message: "Backend testing completed successfully. All core endpoints working correctly. WebSocket connection active with real-time Deriv data streaming."
     - agent: "testing"
