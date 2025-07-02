@@ -935,6 +935,62 @@ async def switch_deriv_account(request: dict):
     except Exception as e:
         logger.error(f"Error switching Deriv account: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
+@api_router.post("/refresh-bot-balance")
+async def refresh_bot_balance(request: dict):
+    """Manually refresh bot balance from real Deriv account"""
+    try:
+        bot_id = request.get("bot_id")
+        if not bot_id:
+            raise HTTPException(status_code=400, detail="Bot ID is required")
+            
+        if bot_id not in active_bots:
+            raise HTTPException(status_code=404, detail=f"Bot {bot_id} not found")
+            
+        bot_data = active_bots[bot_id]
+        config = bot_data["config"]
+        
+        # Get current real balance from Deriv account
+        try:
+            from deriv_client import DerivWebSocketClient
+            temp_client = DerivWebSocketClient(config.api_token)
+            await temp_client.connect()
+            await asyncio.sleep(2)
+            
+            if temp_client.is_authorized:
+                await temp_client.get_account_balance()
+                await asyncio.sleep(2)
+                real_balance = getattr(temp_client, 'current_balance', bot_data["current_balance"])
+                
+                # Update bot balance
+                old_balance = bot_data["current_balance"]
+                bot_data["current_balance"] = float(real_balance)
+                
+                await temp_client.disconnect()
+                
+                logger.info(f"💰 Refreshed bot {bot_id} balance: ${old_balance} -> ${real_balance}")
+                
+                return {
+                    "status": "success",
+                    "message": "Bot balance refreshed successfully",
+                    "bot_id": bot_id,
+                    "old_balance": old_balance,
+                    "new_balance": real_balance,
+                    "currency": getattr(temp_client, 'current_currency', 'USD')
+                }
+            else:
+                raise HTTPException(status_code=401, detail="Failed to authorize with Deriv API")
+                
+        except Exception as e:
+            logger.error(f"Error refreshing bot balance: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to refresh balance: {str(e)}")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error refreshing bot balance: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
 async def websocket_endpoint(websocket: WebSocket):
     """WebSocket endpoint for real-time updates"""
     await websocket.accept()
