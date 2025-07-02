@@ -388,13 +388,32 @@ async def restart_bot(bot_id: str):
             # Start trading task
             asyncio.create_task(run_bot_trading(bot_id))
         else:
-            # Recreate bot runtime data if not exists
+            # Recreate bot runtime data if not exists - use real account balance
             config = BotConfig(**bot_config)
+            
+            # Get current real balance from Deriv account
+            real_balance = 1000.0  # Default fallback
+            try:
+                from deriv_client import DerivWebSocketClient
+                temp_client = DerivWebSocketClient(config.api_token)
+                await temp_client.connect()
+                await asyncio.sleep(2)
+                
+                if temp_client.is_authorized:
+                    await temp_client.get_account_balance()
+                    await asyncio.sleep(2)
+                    real_balance = getattr(temp_client, 'current_balance', 1000.0)
+                    logger.info(f"💰 Retrieved real account balance for restart: ${real_balance}")
+                    
+                await temp_client.disconnect()
+            except Exception as e:
+                logger.warning(f"Could not fetch real balance for restart: {e}")
+                
             active_bots[bot_id] = {
                 "config": config,
                 "status": "STARTING",
                 "start_time": datetime.utcnow(),
-                "current_balance": 1000.0,  # Reset to starting balance
+                "current_balance": float(real_balance),  # Use REAL account balance
                 "total_trades": 0,
                 "winning_trades": 0,
                 "total_profit": 0.0,
