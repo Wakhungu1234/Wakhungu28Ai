@@ -83,7 +83,9 @@ class DerivWebSocketClient:
             if 'authorize' in data:
                 if data.get('authorize'):
                     self.is_authorized = True
+                    self.account_info = data['authorize']
                     logger.info("Successfully authorized with Deriv API")
+                    logger.info(f"Account: {self.account_info.get('loginid')} | Balance: {self.account_info.get('balance')} {self.account_info.get('currency')}")
                     # Start subscribing to tick data after authorization
                     await self._start_subscriptions()
                 else:
@@ -91,17 +93,39 @@ class DerivWebSocketClient:
                     if 'error' in data:
                         logger.error(f"Authorization error: {data['error']}")
             
+            # Handle account status response
+            elif 'get_account_status' in data:
+                account_status = data['get_account_status']
+                logger.info(f"Account Status: {account_status}")
+            
+            # Handle settings response
+            elif 'get_settings' in data:
+                settings = data['get_settings']
+                logger.info(f"Account Settings: {settings}")
+            
+            # Handle account types response
+            elif 'get_account_types' in data:
+                account_types = data['get_account_types']
+                logger.info(f"Available Accounts: {account_types}")
+            
+            # Handle account switch response
+            elif 'switch_account' in data:
+                switch_result = data['switch_account']
+                logger.info(f"Account Switch Result: {switch_result}")
+            
             # Handle balance response
             elif 'balance' in data:
                 balance_data = data['balance']
-                logger.info(f"💰 Account Balance: ${balance_data.get('balance', 0):.2f} {balance_data.get('currency', 'USD')}")
+                self.current_balance = balance_data.get('balance', 0)
+                self.current_currency = balance_data.get('currency', 'USD')
+                logger.info(f"💰 Account Balance: {self.current_balance} {self.current_currency}")
             
             # Handle buy response (real trade execution)
             elif 'buy' in data:
                 buy_data = data['buy']
                 contract_id = buy_data.get('contract_id')
                 buy_price = buy_data.get('buy_price')
-                logger.info(f"✅ REAL TRADE EXECUTED: Contract ID {contract_id}, Price: ${buy_price}")
+                logger.info(f"✅ REAL TRADE EXECUTED: Contract ID {contract_id}, Price: {buy_price}")
             
             # Handle tick data
             elif 'tick' in data:
