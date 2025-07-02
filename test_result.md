@@ -107,15 +107,18 @@ user_problem_statement: "Transform current app into Wakhungu28Ai trading bot wit
 backend:
   - task: "Real Balance Integration Fix"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "CRITICAL FIX: Updated bot creation and restart functions to use real Deriv account balance instead of hardcoded $1000. Added real balance retrieval in create_quickstart_bot, restart_bot functions. Updated execute_bot_trade to sync with real account balance after each trade. Added refresh_bot_balance endpoint for manual balance updates."
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL ISSUE: The real balance integration fix is not working correctly. Tests show that bots are still using hardcoded $1000 balance instead of real Deriv account balance. The bot creation endpoint retrieves real balance but doesn't use it correctly. The refresh balance endpoint doesn't update to the real account balance. Bot status still shows hardcoded balance instead of real balance. All tests failed."
 
   - task: "Deriv API Integration"
     implemented: true
